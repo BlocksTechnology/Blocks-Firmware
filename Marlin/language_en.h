@@ -8,6 +8,10 @@
 #ifndef LANGUAGE_EN_H
 #define LANGUAGE_EN_H
 
+#define MACHINE_NAME "Blocks zero"
+#define FIRMWARE_URL "http://www.blockstec.com"
+#define FIRMWARE_VER "v1.2.1"
+
 #define WELCOME_MSG                         MACHINE_NAME " ready."
 #define MSG_SD_INSERTED                     "Card inserted"
 #define MSG_SD_REMOVED                      "Card removed"
@@ -99,6 +103,13 @@
 #define MSG_WATCH                           "Info screen"
 #define MSG_PREPARE                         "Prepare"
 #define MSG_TUNE                            "Tune"
+#define MSG_PAUSED "Press to resume"
+#define MSG_PAUSING "Pausing..."
+#define MSG_PRINTING "Printing..."
+#define MSG_READY_UNLOAD "Press & unload fil."
+#define MSG_UNLOAD_CLICK "Press to continue"
+#define MSG_LOAD_CLICK "Load new filament"
+#define MSG_BACK "Back"
 #define MSG_PAUSE_PRINT                     "Pause print"
 #define MSG_RESUME_PRINT                    "Resume print"
 #define MSG_STOP_PRINT                      "Stop print"
@@ -131,6 +142,32 @@
 #define MSG_ENDSTOP_ABORT                   "Endstop abort"
 
 #define MSG_RECTRACT                        "Rectract"
+
+#define MSG_FILAMENT "Filament"
+	#define MSG_LEVEL_PLATE "Level plate"
+	#define MSG_START_SCRIPT "Start script"
+	#define MSG_PREHEAT "Preheat"
+	#define MSG_JOG "Jog"
+	#define MSG_LOAD "Load"
+	#define MSG_UNLOAD "Unload"
+	#define MSG_UNCLOG "Unclog Nozzle"
+	#define MSG_ABORT "Abort" 
+	#define MSG_PRE_EXTRUD "Insert & Press"      
+	#define MSG_EXTRUDING "Extruding..." 
+	#define MSG_LENGTH "Length:"         
+	#define MSG_RETRACTING "Retracting"
+	#define MSG_WELLCOME "Blocks zero"
+	#define MSG_LP_INTRO "  Leveling plate...    Press to start   "
+	#define MSG_LP_1 " Adjust first point  & Press the button"
+	#define MSG_LP_2 "Adjust second point  & Press the button"
+	#define MSG_LP_3 "Adjust third point   & Press the button"
+	#define MSG_LP_4 "Adjust fourth point   & Press the button"
+        #define MSG_LP_5 "     Is it ok?         Press to end"       
+        #define MSG_LP_6 " Plate leveled!"
+
+	#define MSG_LP_COOL_1 "Cooling..."
+	#define MSG_LP_COOL_2 "Temp:"
+	#define MSG_LP_COOL_3 "   Press to abort"
 
 #ifdef DELTA_CALIBRATION_MENU
     #define MSG_DELTA_CALIBRATE             "Delta Calibration"

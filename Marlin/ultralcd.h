@@ -12,6 +12,13 @@
   void lcd_setalertstatuspgm(const char* message);
   void lcd_reset_alert_level();
   bool lcd_detected(void);
+  void lcd_show_status();
+
+  void set_pageShowInfo(int value);
+  void set_ChangeScreen(boolean state);
+  void config_lcd_level_bed(void);
+  void lcd_level_bed_cooling(void);
+  void lcd_level_bed(void);
 
 #ifdef DOGLCD
   extern int lcd_contrast;
