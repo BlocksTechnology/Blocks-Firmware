@@ -172,6 +172,9 @@
 // M665 - set delta configurations
 // M666 - set delta endstop adjustment
 // M605 - Set dual x-carriage movement mode: S<mode> [ X<duplication x-offset> R<duplication temp offset> ]
+// M700 - Level plate script for use with Blocks printer.
+// M701 - Load filament script for use with Blocks printer.
+// M702 - Unload filament script for use with Blocks printer.
 // M907 - Set digital trimpot motor current using axis codes.
 // M908 - Control digital trimpot directly.
 // M350 - Set microstepping mode.
@@ -199,6 +202,9 @@
 //===========================================================================
 //=============================public variables=============================
 //===========================================================================
+
+extern boolean FilamentMenuActive;
+
 #ifdef SDSUPPORT
 CardReader card;
 #endif
@@ -399,6 +405,12 @@ bool target_direction;
 unsigned long chdkHigh = 0;
 boolean chdkActive = false;
 #endif
+//==Blocks==
+static bool filament_ran_out = false;
+static bool changing_filament = false;
+bool stop_buffer = false;
+int stop_buffer_code = 0;
+
 
 //===========================================================================
 //=============================Routines======================================
@@ -621,13 +633,51 @@ void setup()
   digitalWrite(SERVO0_PIN, LOW); // turn it off
 #endif // Z_PROBE_SLED
   setup_homepin();
+
+      SET_INPUT(FIL_RUNOUT_PIN);
+      WRITE(FIL_RUNOUT_PIN, HIGH);
 }
+
+#ifdef FILAMENT_RUNOUT_SENSOR
+
+  void handle_filament_runout() {
+    if (!filament_ran_out) {
+      filament_ran_out = true;
+
+FilamentMenuActive = true;
+
+    stop_buffer = true;
+    stop_buffer_code = 2;
+
+     // enquecommand_P(PSTR("M600"));
+     // st_synchronize();
+    }
+  }
+
+#endif // FILAMENT_RUNOUT_SENSOR
+
 
 
 void loop()
 {
-  if(buflen < (BUFSIZE-1))
-    get_command();
+  if (stop_buffer == false) {
+    if(buflen < (BUFSIZE-1))
+      get_command();
+  } else{
+    switch (stop_buffer_code) {
+      case 1:
+        enquecommand_P(PSTR("M25"));
+        break;
+      case 2:
+        enquecommand_P(PSTR("M600"));
+        break;
+      default:
+        break;
+      }
+      stop_buffer_code = 0;
+  }
+
+
   #ifdef SDSUPPORT
   card.checkautostart(false);
   #endif
@@ -991,6 +1041,25 @@ static void axis_is_at_home(int axis) {
 #endif
 }
 
+static void do_blocking_move_to(float x, float y, float z) {
+    float oldFeedRate = feedrate;
+
+    feedrate = homing_feedrate[Z_AXIS];
+
+    current_position[Z_AXIS] = z;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+    st_synchronize();
+
+    feedrate = XY_TRAVEL_SPEED;
+
+    current_position[X_AXIS] = x;
+    current_position[Y_AXIS] = y;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+    st_synchronize();
+
+    feedrate = oldFeedRate;
+}
+
 #ifdef ENABLE_AUTO_BED_LEVELING
 #ifdef AUTO_BED_LEVELING_GRID
 static void set_bed_level_equation_lsq(double *plane_equation_coefficients)
@@ -1076,24 +1145,7 @@ static void run_z_probe() {
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 }
 
-static void do_blocking_move_to(float x, float y, float z) {
-    float oldFeedRate = feedrate;
 
-    feedrate = homing_feedrate[Z_AXIS];
-
-    current_position[Z_AXIS] = z;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    feedrate = XY_TRAVEL_SPEED;
-
-    current_position[X_AXIS] = x;
-    current_position[Y_AXIS] = y;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    feedrate = oldFeedRate;
-}
 
 static void do_blocking_move_relative(float offset_x, float offset_y, float offset_z) {
     do_blocking_move_to(current_position[X_AXIS] + offset_x, current_position[Y_AXIS] + offset_y, current_position[Z_AXIS] + offset_z);
@@ -1547,12 +1599,12 @@ void process_commands()
         delayed_move_time = 0;
         active_extruder_parked = true;
       #else
-        HOMEAXIS(X);
+        HOMEAXIS(Y); //Reversed for blocks one
       #endif
       }
 
       if((home_all_axis) || (code_seen(axis_codes[Y_AXIS]))) {
-        HOMEAXIS(Y);
+        HOMEAXIS(X);
       }
 
       if(code_seen(axis_codes[X_AXIS]))
@@ -1579,12 +1631,6 @@ void process_commands()
       #if Z_HOME_DIR < 0                      // If homing towards BED do Z last
         #ifndef Z_SAFE_HOMING
           if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
-            #if defined (Z_RAISE_BEFORE_HOMING) && (Z_RAISE_BEFORE_HOMING > 0)
-              destination[Z_AXIS] = Z_RAISE_BEFORE_HOMING * home_dir(Z_AXIS) * (-1);    // Set destination away from bed
-              feedrate = max_feedrate[Z_AXIS];
-              plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate, active_extruder);
-              st_synchronize();
-            #endif
             HOMEAXIS(Z);
           }
         #else                      // Z Safe mode activated.
@@ -1971,7 +2017,57 @@ void process_commands()
       starttime=millis();
       break;
     case 25: //M25 - Pause SD print
-      card.pauseSDPrint();
+       float target[4];
+      float lastpos[4];
+
+      target[X_AXIS]=current_position[X_AXIS];
+      target[Y_AXIS]=current_position[Y_AXIS];
+      target[Z_AXIS]=current_position[Z_AXIS];
+      target[E_AXIS]=current_position[E_AXIS];
+      
+      lastpos[X_AXIS]=current_position[X_AXIS];
+      lastpos[Y_AXIS]=current_position[Y_AXIS];
+      lastpos[Z_AXIS]=current_position[Z_AXIS];
+      lastpos[E_AXIS]=current_position[E_AXIS];
+
+      target[E_AXIS] += FILAMENTCHANGE_FIRSTRETRACT;
+
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 3000/60, active_extruder);
+
+
+      target[Z_AXIS]+= FILAMENTCHANGE_ZADD;
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 6000/60, active_extruder);
+
+
+      target[X_AXIS]= 5;
+      target[Y_AXIS]= 5;
+
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 6000/60, active_extruder);
+
+      st_synchronize();
+
+      LCD_MESSAGEPGM(MSG_PAUSED);
+      lcd_show_status();
+      lcd_update();
+
+      while(!lcd_clicked()){
+        manage_heater();
+        lcd_update();
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS],target[E_AXIS], 300/60, active_extruder);
+        st_synchronize();
+      }
+      st_synchronize();
+
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //should do nothing
+      plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move xy back
+      plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move z back
+      plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], feedrate/60, active_extruder); //final untretract
+
+      stop_buffer = false;
+
+      LCD_MESSAGEPGM(MSG_PRINTING);
+      lcd_show_status();
+      lcd_update();
       break;
     case 26: //M26 - Set SD index
       if(card.cardOK && code_seen('S')) {
@@ -3552,131 +3648,268 @@ case 404:  //M404 Enter the nominal filament width (3mm, 1.75mm ) N<3.0> or disp
     #ifdef FILAMENTCHANGEENABLE
     case 600: //Pause for filament change X[pos] Y[pos] Z[relative lift] E[initial retract] L[later retract distance for removal]
     {
-        float target[4];
-        float lastpos[4];
-        target[X_AXIS]=current_position[X_AXIS];
-        target[Y_AXIS]=current_position[Y_AXIS];
-        target[Z_AXIS]=current_position[Z_AXIS];
-        target[E_AXIS]=current_position[E_AXIS];
-        lastpos[X_AXIS]=current_position[X_AXIS];
-        lastpos[Y_AXIS]=current_position[Y_AXIS];
-        lastpos[Z_AXIS]=current_position[Z_AXIS];
-        lastpos[E_AXIS]=current_position[E_AXIS];
-        //retract by E
-        if(code_seen('E'))
-        {
-          target[E_AXIS]+= code_value();
-        }
-        else
-        {
-          #ifdef FILAMENTCHANGE_FIRSTRETRACT
-            target[E_AXIS]+= FILAMENTCHANGE_FIRSTRETRACT ;
-          #endif
-        }
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder);
+      //LCD_MESSAGEPGM(MSG_PAUSING);
+      
 
-        //lift Z
-        if(code_seen('Z'))
-        {
-          target[Z_AXIS]+= code_value();
-        }
-        else
-        {
-          #ifdef FILAMENTCHANGE_ZADD
-            target[Z_AXIS]+= FILAMENTCHANGE_ZADD ;
-          #endif
-        }
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder);
+          
+    set_pageShowInfo(15); 
+    set_ChangeScreen(true);
+      lcd_update();
+    changing_filament=true;
 
-        //move xy
-        if(code_seen('X'))
-        {
-          target[X_AXIS]+= code_value();
-        }
-        else
-        {
-          #ifdef FILAMENTCHANGE_XPOS
-            target[X_AXIS]= FILAMENTCHANGE_XPOS ;
-          #endif
-        }
-        if(code_seen('Y'))
-        {
-          target[Y_AXIS]= code_value();
-        }
-        else
-        {
-          #ifdef FILAMENTCHANGE_YPOS
-            target[Y_AXIS]= FILAMENTCHANGE_YPOS ;
-          #endif
-        }
 
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder);
+    
+    
 
-        if(code_seen('L'))
-        {
-          target[E_AXIS]+= code_value();
-        }
-        else
-        {
-          #ifdef FILAMENTCHANGE_FINALRETRACT
-            target[E_AXIS]+= FILAMENTCHANGE_FINALRETRACT ;
-          #endif
-        }
+      float target[4];
+      float lastpos[4];
 
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder);
+      target[X_AXIS]=current_position[X_AXIS];
+      target[Y_AXIS]=current_position[Y_AXIS];
+      target[Z_AXIS]=current_position[Z_AXIS];
+      target[E_AXIS]=current_position[E_AXIS];
 
-        //finish moves
-        st_synchronize();
-        //disable extruder steppers so filament can be removed
-        disable_e0();
-        disable_e1();
-        disable_e2();
-        delay(100);
-        LCD_ALERTMESSAGEPGM(MSG_FILAMENTCHANGE);
-        uint8_t cnt=0;
-        while(!lcd_clicked()){
-          cnt++;
-          manage_heater();
-          manage_inactivity(true);
-          lcd_update();
-          if(cnt==0)
-          {
-          #if BEEPER > 0
-            SET_OUTPUT(BEEPER);
+      lastpos[X_AXIS]=current_position[X_AXIS];
+      lastpos[Y_AXIS]=current_position[Y_AXIS];
+      lastpos[Z_AXIS]=current_position[Z_AXIS];
+      lastpos[E_AXIS]=current_position[E_AXIS];
 
-            WRITE(BEEPER,HIGH);
-            delay(3);
-            WRITE(BEEPER,LOW);
-            delay(3);
-          #else
-			#if !defined(LCD_FEEDBACK_FREQUENCY_HZ) || !defined(LCD_FEEDBACK_FREQUENCY_DURATION_MS)
-              lcd_buzz(1000/6,100);
-			#else
-			  lcd_buzz(LCD_FEEDBACK_FREQUENCY_DURATION_MS,LCD_FEEDBACK_FREQUENCY_HZ);
-			#endif
-          #endif
-          }
-        }
+      if (code_seen('E')) {
+        target[E_AXIS] += code_value();
+      } else {
+        #ifdef FILAMENTCHANGE_FIRSTRETRACT
+        target[E_AXIS] += FILAMENTCHANGE_FIRSTRETRACT;
+        #endif // FILAMENTCHANGE_FIRSTRETRACT
+      }
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 3000/60, active_extruder);
 
-        //return to normal
-        if(code_seen('L'))
-        {
-          target[E_AXIS]+= -code_value();
+      if (code_seen('Z')) {
+        target[Z_AXIS] += code_value();
+      } else {
+        #ifdef FILAMENTCHANGE_ZADD
+        target[Z_AXIS] += FILAMENTCHANGE_ZADD;
+        #endif // FILAMENTCHANGE_ZADD
+      }
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 6000/60, active_extruder);
+
+      if (code_seen('X')) {
+        target[X_AXIS] = code_value();
+      } else {
+        #ifdef FILAMENTCHANGE_XPOS
+        target[X_AXIS] = FILAMENTCHANGE_XPOS;
+        #endif // FILAMENTCHANGE_XPOS
+      }
+      if(code_seen('Y')) {
+        target[Y_AXIS] = code_value();
+      } else {
+        #ifdef FILAMENTCHANGE_YPOS
+        target[Y_AXIS] = FILAMENTCHANGE_YPOS;
+        #endif // FILAMENTCHANGE_YPOS    
+      }
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 6000/60, active_extruder);
+      
+      st_synchronize();
+    
+    
+
+      /*lcd_show_status();
+      lcd_update();
+      LCD_MESSAGEPGM(MSG_READY_UNLOAD);
+      lcd_update();
+      lcd_show_status();
+
+      while (!lcd_clicked()) {
+        manage_heater();
+        lcd_update();
+
+
+      }*/
+
+set_pageShowInfo(12); 
+      set_ChangeScreen(true);
+    
+    
+
+
+
+    unsigned long waitss;
+    waitss=millis()+5000;
+    unsigned long curr_times;
+    curr_times=millis();
+    float former_temp;
+    unsigned int counts;
+    int page=12;
+    counts=0;
+    former_temp=target_temperature[active_extruder];
+    while (!lcd_clicked()) {
+      set_pageShowInfo(page);  
+        manage_heater();
+        lcd_update();
+        curr_times=millis();
+        if (curr_times>waitss){
+          tone(BEEPER, 6000);
+          delay(50);
+          noTone(BEEPER);
+          lcd_buzz(50,6000);
+          waitss=millis()+5000;
+          counts++;
         }
-        else
-        {
-          #ifdef FILAMENTCHANGE_FINALRETRACT
-            target[E_AXIS]+=(-1)*FILAMENTCHANGE_FINALRETRACT ;
-          #endif
-        }
-        current_position[E_AXIS]=target[E_AXIS]; //the long retract of L is compensated by manual filament feeding
-        plan_set_e_position(current_position[E_AXIS]);
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //should do nothing
-        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move xy back
-        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move z back
-        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], feedrate/60, active_extruder); //final untretract
+        if(counts == 60){ //60
+          page=16;
+          set_pageShowInfo(16); 
+          set_ChangeScreen(true);
+          target_temperature[active_extruder] = 0;
+          counts++;
+        } 
     }
-    break;
+
+   /* while(!lcd_clicked()){
+      manage_heater();
+      set_pageShowInfo(12);      
+      lcd_update(); 
+    }*/
+  
+
+target_temperature[active_extruder] = former_temp;
+set_pageShowInfo(13); 
+ set_ChangeScreen(true);
+
+    lcd_update();   
+
+while(current_temperature[active_extruder] < (former_temp-5)){
+    manage_heater();
+    set_pageShowInfo(13);      
+    lcd_update();        
+  }
+
+  /*
+  while(!lcd_clicked()){
+    manage_heater();
+    set_pageShowInfo(12);      
+    lcd_update();        
+  }
+  */
+  set_pageShowInfo(11);
+  set_ChangeScreen(true);        
+lcd_update();  
+     /* lcd_show_status();
+      lcd_update();
+      LCD_MESSAGEPGM(MSG_UNLOAD_CLICK);
+      lcd_update();
+      lcd_show_status();*/
+
+      target[E_AXIS] += 15.0;
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 150/60, active_extruder);
+      st_synchronize();
+
+      if(code_seen('L')) {
+        target[E_AXIS] += code_value();
+      } else {
+        #ifdef FILAMENTCHANGE_FINALRETRACT
+        target[E_AXIS]+= FILAMENTCHANGE_FINALRETRACT;
+        #endif // FILAMENTCHANGE_FINALRETRACT
+      }
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 2000/60, active_extruder);
+
+      st_synchronize();
+
+      disable_e0();
+      disable_e1();
+      disable_e2();
+      delay(100);
+      
+      /*while (!lcd_clicked()) {
+        manage_heater();
+        lcd_update();
+      }
+
+      lcd_show_status();
+      lcd_update();
+      LCD_MESSAGEPGM(MSG_LOAD_CLICK);
+      lcd_update();
+      lcd_show_status();*/
+      set_pageShowInfo(7); 
+      set_ChangeScreen(true);
+      
+    
+    while(!lcd_clicked()){
+    manage_heater();
+    set_pageShowInfo(7);      
+    lcd_update();        
+  }
+    set_pageShowInfo(8); 
+    set_ChangeScreen(true);
+lcd_update(); 
+
+      target[E_AXIS]+=20;
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS],target[E_AXIS], 200/60, active_extruder);
+      st_synchronize();
+      delay(100);
+      target[E_AXIS]+=610;
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS],target[E_AXIS], 2000/60, active_extruder);
+      st_synchronize();
+      /*target[E_AXIS]+=100;
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS],target[E_AXIS], 100/60, active_extruder);
+      st_synchronize();
+      
+      do {
+        manage_heater();
+        lcd_update();
+      } while (!lcd_clicked());
+      st_synchronize();
+      
+      lcd_show_status();
+      lcd_update();
+      LCD_MESSAGEPGM(MSG_PRINTING);
+      lcd_update();
+      lcd_show_status();*/
+    
+    set_pageShowInfo(9);
+  set_ChangeScreen(true);     
+    lcd_update();  
+    
+    
+     unsigned long waits;
+    waits=millis()+2000;
+    unsigned long curr_time;
+    curr_time=millis();
+     while (!lcd_clicked()) {
+        manage_heater();
+        lcd_update();
+    curr_time=millis();
+    if (curr_time>waits){
+      tone(BEEPER, 6000);
+          delay(100);
+          noTone(BEEPER);
+          lcd_buzz(100,6000);
+      target[E_AXIS] += 3.0;
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 300/60, active_extruder);
+      waits=millis()+2000;
+    }
+    
+    //st_synchronize();
+      }
+
+      current_position[E_AXIS]=lastpos[E_AXIS];
+      plan_set_e_position(current_position[E_AXIS]);
+    
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], lastpos[E_AXIS], 6000/60, active_extruder); //should do nothing
+      plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], lastpos[E_AXIS], 6000/60, active_extruder); //move xy back
+      plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], 6000/60, active_extruder); //move z back
+      plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], 3000/60, active_extruder); //final untretract
+
+#ifdef FILAMENT_RUNOUT_SENSOR
+      filament_ran_out = false;
+#endif
+      stop_buffer = false;
+        set_pageShowInfo(10);
+    set_ChangeScreen(true);
+ 
+  LCD_MESSAGEPGM(MSG_PRINTING);
+      changing_filament=false;
+
+      break;
+    }
     #endif //FILAMENTCHANGEENABLE
     #ifdef DUAL_X_CARRIAGE
     case 605: // Set dual x-carriage movement mode:
@@ -3724,6 +3957,366 @@ case 404:  //M404 Enter the nominal filament width (3mm, 1.75mm ) N<3.0> or disp
     }
     break;
     #endif //DUAL_X_CARRIAGE
+
+
+
+    /*
+    GCODES:
+
+    *M700: level plate script
+    *M701: load filament script
+    *M702: unload filament script
+
+*/
+   
+    case 700: // Script for level the build plate going to 3 points
+    {
+  SERIAL_ECHOLN(" --LEVEL PLATE SCRIPT--");      
+
+   set_ChangeScreen(true);
+  
+  while(!lcd_clicked()){
+  set_pageShowInfo(0);      
+  lcd_update();
+  manage_heater();   
+  }
+  
+  set_pageShowInfo(1);
+  set_ChangeScreen(true);        
+//        st_synchronize();       
+       //hacer homing
+       
+      saved_feedrate = feedrate;
+      saved_feedmultiply = feedmultiply;
+      feedmultiply = 100;
+      previous_millis_cmd = millis();
+
+      enable_endstops(true);
+
+      for(int8_t i=0; i < NUM_AXIS; i++) {
+  destination[i] = current_position[i];
+      }
+      feedrate = 0.0;
+      home_all_axis = !((code_seen(axis_codes[0])) || (code_seen(axis_codes[1])) || (code_seen(axis_codes[2])));
+
+      #if Z_HOME_DIR > 0                      // If homing away from BED do Z first
+      if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
+  HOMEAXIS(Z);
+      }
+      #endif
+
+      if((home_all_axis) || (code_seen(axis_codes[Y_AXIS])))
+      {
+      HOMEAXIS(Y);
+  
+      }
+
+      if((home_all_axis) || (code_seen(axis_codes[X_AXIS]))) {
+  HOMEAXIS(X);
+      }
+
+      #if Z_HOME_DIR < 0                      // If homing towards BED do Z last
+      if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
+  HOMEAXIS(Z);
+      }
+      #endif
+
+      if(code_seen(axis_codes[X_AXIS]))
+      {
+  if(code_value_long() != 0) {
+    current_position[X_AXIS]=code_value()+add_homing[0];
+  }
+      }
+
+      if(code_seen(axis_codes[Y_AXIS])) {
+  if(code_value_long() != 0) {
+    current_position[Y_AXIS]=code_value()+add_homing[1];
+  }
+      }
+
+      if(code_seen(axis_codes[Z_AXIS])) {
+  if(code_value_long() != 0) {
+    current_position[Z_AXIS]=code_value()+add_homing[2];
+  }
+      }
+
+      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+
+
+      #ifdef ENDSTOPS_ONLY_FOR_HOMING
+  enable_endstops(false);
+      #endif
+
+      feedrate = saved_feedrate;
+      feedmultiply = saved_feedmultiply;
+      previous_millis_cmd = millis();
+      endstops_hit_on_purpose();        
+  
+  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+
+  // prob 1
+  
+  do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS+10);
+  #if X_MAX_POS > 250
+    do_blocking_move_to((X_MAX_POS-X_MIN_POS)/2,Y_MAX_POS-10, current_position[Z_AXIS]);
+  #else
+    do_blocking_move_to(20, 190, current_position[Z_AXIS]);
+  #endif
+  do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], Z_MIN_POS);
+  
+       while(!lcd_clicked()){          
+    manage_heater();
+  }
+    set_pageShowInfo(2); 
+  set_ChangeScreen(true);
+
+  
+  do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS+10);
+  #if X_MAX_POS > 250
+    do_blocking_move_to(90, 5, current_position[Z_AXIS]);
+  #else
+    do_blocking_move_to(195, 190, current_position[Z_AXIS]);
+  #endif
+  do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS);
+    
+  while(!lcd_clicked()){
+    manage_heater();
+    manage_inactivity();
+  }
+  set_pageShowInfo(3);
+  set_ChangeScreen(true);
+  
+      
+  do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS+10);
+  #if X_MAX_POS > 250
+    do_blocking_move_to(205, 5, current_position[Z_AXIS]);
+  #else
+    do_blocking_move_to(20, 20, current_position[Z_AXIS]);
+  #endif
+  do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS);
+        
+   while(!lcd_clicked()){
+    manage_heater();
+    manage_inactivity();
+  }        
+  
+  #if X_MAX_POS < 250
+  set_pageShowInfo(4);
+    set_ChangeScreen(true);
+    
+      
+    do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS+10);
+    do_blocking_move_to(195, 20, current_position[Z_AXIS]);
+    do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS);
+        
+     while(!lcd_clicked()){
+      manage_heater();
+      manage_inactivity();
+     }
+  #endif
+set_pageShowInfo(5);
+  set_ChangeScreen(true);
+  
+     
+  do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS+10);
+  #if X_MAX_POS > 250
+    do_blocking_move_to(150, 105, current_position[Z_AXIS]);
+  #else
+    do_blocking_move_to((X_MAX_POS-X_MIN_POS)/2, (Y_MAX_POS-Y_MIN_POS)/2, current_position[Z_AXIS]);
+  #endif
+  do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS);
+        
+  while(!lcd_clicked()){                  
+    manage_heater();
+    manage_inactivity();
+  }
+  set_pageShowInfo(6);
+  set_ChangeScreen(true);
+  
+    
+  do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS+10);
+  do_blocking_move_to(10, 10, current_position[Z_AXIS]);
+  //do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS],Z_MIN_POS);  
+  endstops_hit_on_purpose();       
+  target_temperature[active_extruder]=0;
+  target_temperature_bed=0;
+  lcd_setstatus("Blocks one ready");
+    }
+    break;
+    
+    case 701:
+      SERIAL_ECHOLN(" --LOAD-- ");
+     /* lcd_show_status();
+      lcd_update();
+      LCD_MESSAGEPGM(MSG_LOAD_CLICK);
+      lcd_update();
+      lcd_show_status();*/
+     tone(BEEPER, 6000);
+          delay(300);
+          noTone(BEEPER);
+          lcd_buzz(300,6000);
+set_pageShowInfo(7);  
+    set_ChangeScreen(true);
+
+     /*if (target_temperature[0] > Change_Filament_Target_Temp){
+        setTargetHotend0(target_temperature[0]);   
+     } else{
+        setTargetHotend0(Change_Filament_Target_Temp);  
+     }
+*/
+  while(!lcd_clicked()){
+  set_pageShowInfo(7);      
+  lcd_update();  
+  manage_heater();      
+  }
+  set_pageShowInfo(8);
+  set_ChangeScreen(true);     
+   /// lcd_update();  
+    
+       st_synchronize();
+       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]); 
+    
+      current_position[E_AXIS] += 20.0;
+      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],current_position[E_AXIS], 200/60, active_extruder);
+      st_synchronize();
+      delay(100);
+      //-- Extruir!
+      current_position[E_AXIS] += 610.0;
+      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],current_position[E_AXIS], 2000/60, active_extruder);
+      st_synchronize(); 
+
+      ///current_position[E_AXIS] += 100.0;
+      ///plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],current_position[E_AXIS], 100/60, active_extruder);
+     /// st_synchronize();
+    
+    set_pageShowInfo(17);
+  set_ChangeScreen(true);     
+    lcd_update();  
+    
+    
+     unsigned long waits;
+    waits=millis()+2000;
+    unsigned long curr_time;
+    unsigned char timeout_purge;
+    curr_time=millis();
+    timeout_purge=0;
+     while (!lcd_clicked()) {
+        manage_heater();
+        lcd_update();
+        curr_time=millis();
+        if (curr_time>waits){
+          timeout_purge++;
+          tone(BEEPER, 6000);
+          delay(50);
+          noTone(BEEPER);
+          lcd_buzz(50,6000);
+          current_position[E_AXIS] += 3.0;
+          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 300/60, active_extruder);
+          waits=millis()+2000;
+        }
+        if(timeout_purge ==20){
+          break;
+        }
+    
+    //st_synchronize();
+      }
+    
+    /*lcd_show_status();
+      lcd_update();
+      LCD_MESSAGEPGM("Press when purged");
+      lcd_update();
+      lcd_show_status();
+    
+    unsigned long waits;
+    waits=millis()+2000;
+    unsigned long curr_time;
+    curr_time=millis();
+   while (!lcd_clicked()) {
+        manage_heater();
+        lcd_update();
+    curr_time=millis();
+    if (curr_time>waits){
+      lcd_buzz(100, 200);
+      target[E_AXIS] += 1.0;
+      plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], 200/60, active_extruder);
+      waits=millis()+2000;
+    }
+    
+    //st_synchronize();
+      }*/
+   
+    
+    
+    
+  //  do_blocking_extrude_to(100);
+      current_position[E_AXIS] -= 6.0;
+      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],current_position[E_AXIS], 1000/60, active_extruder);
+      st_synchronize();
+    //eeprom_write_byte(99, 0xFF);
+    set_pageShowInfo(10);
+    set_ChangeScreen(true);
+  
+  target_temperature[active_extruder]=0;
+  #ifdef FILAMENT_RUNOUT_SENSOR
+      filament_ran_out = false;
+#endif
+  
+      break;
+      
+    case 702:
+      SERIAL_ECHOLN(" --UNLOAD-- ");
+ tone(BEEPER, 6000);
+          delay(300);
+          noTone(BEEPER);
+          lcd_buzz(300,6000);
+
+ set_pageShowInfo(11);  
+      set_ChangeScreen(true);
+
+     
+  lcd_update();        
+
+      //LCD_MESSAGEPGM("Unloading...");
+       st_synchronize(); 
+       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]); 
+    
+      //-- Extruir!
+      current_position[E_AXIS] += 30.0;
+      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],current_position[E_AXIS], 200/60, active_extruder);
+      st_synchronize(); 
+      
+      //-- Sacar!
+      current_position[E_AXIS] -= 800.0;
+      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],current_position[E_AXIS], 2000/60, active_extruder);
+      st_synchronize();
+       tone(BEEPER, 6000);
+    delay(100);
+    noTone(BEEPER);
+
+      lcd_buzz(100,6000);
+
+target_temperature[active_extruder]=0; 
+ tone(BEEPER, 6000);
+    delay(100);
+    noTone(BEEPER);
+
+      lcd_buzz(100,6000);
+
+      #ifdef FILAMENT_RUNOUT_SENSOR
+      filament_ran_out = false;
+#endif
+
+//set_ChangeScreen(true);
+  set_pageShowInfo(14);
+  set_ChangeScreen(true);
+   lcd_update(); 
+ target_temperature[active_extruder]=0;
+  //  do_blocking_extrude_to(30);
+  //  do_blocking_extrude_to(-100);
+//LCD_MESSAGEPGM("Blocks one ready");
+      break;  
+    
+
 
     case 907: // M907 Set digital trimpot motor current using axis codes.
     {
@@ -4335,6 +4928,21 @@ void handle_status_leds(void) {
 
 void manage_inactivity(bool ignore_stepper_queue/*=false*/) //default argument set in Marlin.h
 {
+
+  #ifdef FILAMENT_RUNOUT_SENSOR
+   // if ((card.sdprinting || print_job_timer.isRunning()) && (READ(FIL_RUNOUT_PIN) == FIL_RUNOUT_INVERTING))
+   //   handle_filament_runout();
+
+  if (READ(FIL_RUNOUT_PIN) == FIL_RUNOUT_INVERTING) {
+    //SERIAL_ECHO("no filament");
+    if (changing_filament ==false){
+       if (card.sdprinting && !Stopped){
+        handle_filament_runout();
+      }
+    }
+   
+  } 
+#endif
 	
 #if defined(KILL_PIN) && KILL_PIN > -1
 	static int killCount = 0;   // make the inactivity button a bit less responsive
