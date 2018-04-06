@@ -575,6 +575,9 @@
   // Add an 'M73' G-code to set the current percentage
   //#define LCD_SET_PROGRESS_MANUALLY
 
+  // Disable on-screen coordinates
+  #define LCD_DISABLE_COORDINATES
+
   // This allows hosts to request long names for files and folders with M33
   //#define LONG_FILENAME_HOST_SUPPORT
 

@@ -624,6 +624,7 @@ static void lcd_implementation_status_screen() {
     #define INFO_FONT_HEIGHT 8
   #endif
 
+  #if DISABLED(LCD_DISABLE_COORDINATES)
   #define XYZ_BASELINE (30 + INFO_FONT_HEIGHT)
 
   #define X_LABEL_POS  3
@@ -697,6 +698,7 @@ static void lcd_implementation_status_screen() {
       #endif
     }
   }
+  #endif
 
   //
   // Feedrate
