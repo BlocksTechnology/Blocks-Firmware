@@ -346,7 +346,7 @@ static void lcd_implementation_init() {
     u8g.begin(); // re-initialize the display
   #endif
 
-  #if DISABLED(MINIPANEL) // setContrast not working for Mini Panel
+  #if (DISABLED(MINIPANEL) || ENABLED(MKS_MINI_12864)) // setContrast not working for Mini Panel
     u8g.setContrast(lcd_contrast);
   #endif
 
