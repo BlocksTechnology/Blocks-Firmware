@@ -263,6 +263,27 @@
 #define MSG_DEBUG_COMMUNICATION             "COMMUNICATION"
 #define MSG_DEBUG_LEVELING                  "LEVELING"
 
+//  BLOCKS MADE
+#define MSG_PAUSING                          "Pausing..."
+#define MSG_FILAMENT                         "Filament"
+#define MSG_LEVEL_PLATE                      "Level Plate"
+#define MSG_LP_COOL_1                        "Cooling..."
+#define MSG_LP_COOL_2                        "Temp:"
+#define MSG_LP_COOL_3                        "   Press to abort"
+#define MSG_LP_1                             "Adjust first point  & Press the button"
+#define MSG_LP_2                             "Adjust second point  & Press the button"
+#define MSG_LP_3                             "Adjust third point  & Press the button"
+#define MSG_LP_4                             "Adjust fourth point  & Press the button"
+#define MSG_LP_5                             "     Is it ok?         Press to end"
+#define MSG_LP_6                             " Plate leveled!"
+#define MSG_LP_INTRO                         "  Leveling plate...    Press to start   "
+#define MSG_LOAD                             "Load"
+#define MSG_UNLOAD                           "Unload"
+#define MSG_ABORT                            "Abort"
+#define MSG_PRE_EXTRUD                       "Insert & Press"
+#define MSG_BED_TARGET                       "  Bed: "
+#define MSG_FILAMENT_CHANGE_HEADER           "FILAMENT CHANGE"
+
 // LCD Menu Messages
 
 #define LANGUAGE_INCL_(M) STRINGIFY_(language_##M.h)
