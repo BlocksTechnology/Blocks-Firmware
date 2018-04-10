@@ -184,6 +184,7 @@ void ok_to_send();
 void kill(const char*);
 
 void quickstop_stepper();
+extern bool printing_from_wifi;
 
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
   void handle_filament_runout();

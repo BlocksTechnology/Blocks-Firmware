@@ -1006,7 +1006,31 @@ void kill_screen(const char* lcd_msg) {
 
   void lcd_main_menu() {
     START_MENU();
-    MENU_BACK(MSG_WATCH);
+    MENU_BACK(MSG_BACK);
+
+    #if ENABLED(SDSUPPORT)
+      if (card.cardOK) {
+        if (card.isFileOpen()) {
+          if (card.sdprinting)
+            MENU_ITEM(function, MSG_PAUSE_PRINT, lcd_sdcard_pause);
+          else
+            MENU_ITEM(function, MSG_RESUME_PRINT, lcd_sdcard_resume);
+          MENU_ITEM(function, MSG_STOP_PRINT, lcd_sdcard_stop);
+        }
+        else if (printing_from_wifi != true) {
+          MENU_ITEM(submenu, MSG_CARD_MENU, lcd_sdcard_menu);
+          #if !PIN_EXISTS(SD_DETECT)
+            MENU_ITEM(gcode, MSG_CNG_SDCARD, PSTR("M21"));  // SD-card changed by user
+          #endif
+        }
+      }
+      else if (printing_from_wifi != true) {
+        MENU_ITEM(submenu, MSG_NO_CARD, lcd_sdcard_menu);
+        #if !PIN_EXISTS(SD_DETECT)
+          MENU_ITEM(gcode, MSG_INIT_SDCARD, PSTR("M21")); // Manually initialize the SD-card via user interface
+        #endif
+      }
+    #endif // SDSUPPORT
 
     #if ENABLED(CUSTOM_USER_MENUS)
       MENU_ITEM(submenu, MSG_USER_MENU, _lcd_user_menu);

@@ -722,6 +722,7 @@ float graus = 0;
 float zprobe_zprobe_zoffset;
 extern boolean defer_return_to_status;
 void ensure_safe_temperature();
+bool printing_from_wifi =  false;
 //////
 //////
 /**
@@ -10701,6 +10702,19 @@ inline void gcode_M711(bool filament_runout = false) {
 
 #endif // MK2_MULTIPLEXER
 
+  inline void gcode_M703() {
+    SERIAL_ECHO("PRINTING WIFI TRUE");
+    printing_from_wifi =  true;
+    lcd_return_to_status();
+  }
+
+  inline void gcode_M704() {
+
+    SERIAL_ECHO("PRINTING WIFI FALSE");
+    printing_from_wifi =  false;
+    lcd_return_to_status();
+  }
+
 #if ENABLED(DUAL_X_CARRIAGE)
 
   /**
@@ -12892,6 +12906,14 @@ void process_parsed_command() {
       #if ENABLED(ADVANCED_PAUSE_FEATURE)
         case 600: // M600: Pause for filament change
           gcode_M600();
+          break;
+
+        case 703:  // M703 - PRINTING WIFI TRUE
+          gcode_M703();
+          break;
+
+        case 704:   //M704 - PRINTING WIFI FALSE
+          gcode_M704();
           break;
 
         case 710: // M710: LOAD
