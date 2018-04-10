@@ -6199,9 +6199,7 @@ inline void gcode_G34() {
     thermalManager.manage_heater();
 
     if(thermalManager.degBed() > 45) {
-
       done = 1;
-      fanSpeeds[0] = 255;
       break;
     }
 
