@@ -783,6 +783,21 @@ static void lcd_implementation_status_screen() {
         lcd_print(itostr3(thermalManager.degTargetHotend(active_extruder)));
     }
 
+    static void lcd_implementation_bed_status(const uint8_t row) {
+      row_y1 = row * row_height + 2;
+      row_y2 = row_y1 + row_height - 1;
+
+      if (!PAGE_CONTAINS(row_y1 + 1, row_y2 + 2)) return;
+
+      u8g.setPrintPos(LCD_PIXEL_WIDTH - 11 * (DOG_CHAR_WIDTH), row_y2);
+      lcd_print(' ');
+      lcd_print(itostr3(thermalManager.degBed()));
+      lcd_print('/');
+
+      if (lcd_blink() || !thermalManager.is_bed_idle())
+        lcd_print(itostr3(thermalManager.degTargetBed()));
+    }
+
   #endif // ADVANCED_PAUSE_FEATURE
 
   // Set the colors for a menu item based on whether it is selected
