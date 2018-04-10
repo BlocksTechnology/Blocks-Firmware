@@ -179,6 +179,7 @@ uint16_t max_display_update_time = 0;
   ////// BLOCKS MADE
   //////
 
+  void lcd_filament_menu();
   void lcd_level_plate();
   void lcd_probe_probe_offset();
   static void lcd_set_offset();
@@ -240,6 +241,7 @@ static void clearscreen(){
     void lcd_advanced_pause_heat_nozzle();
     void lcd_advanced_pause_extrude_message();
     void lcd_advanced_pause_resume_message();
+    void lcd_return_from_filament();
   #endif
 
   #if ENABLED(DAC_STEPPER_CURRENT)
@@ -5444,6 +5446,16 @@ static void config_lcd_level_bed_clean_nozzle()
   enqueue_and_echo_commands_P(PSTR("G28"));
   enqueue_and_echo_commands_P(PSTR("G37"));
   //lcd_goto_screen(continue_nozzle_adjustment);
+}
+
+
+static void lcd_filament_menu()
+{
+    START_MENU();
+    MENU_ITEM(back, MSG_BACK, lcd_main_menu);
+    MENU_ITEM(gcode, MSG_LOAD, PSTR("M710"));
+    MENU_ITEM(gcode, MSG_UNLOAD, PSTR("M711"));
+    END_MENU();
 }
 
 static void level_bed_ask_clean_nozzle()

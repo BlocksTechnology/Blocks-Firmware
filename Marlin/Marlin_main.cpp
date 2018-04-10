@@ -10332,6 +10332,342 @@ inline void gcode_M502() {
 
 #endif // ADVANCED_PAUSE_FEATURE
 
+
+///////
+///////BLOCKS MADE
+////////
+
+static void load_filament(const float &load_length = 0, const float &initial_extrude_length = 0, const int8_t max_beep_count = 0) {
+
+    bool nozzle_timed_out = false;
+    int counter_beeps = 5;
+    int8_t beep_count = 5;
+    unsigned long waits;
+    wait_for_user = true;
+    // Re-enable the heaters if they timed out
+    HOTEND_LOOP() {
+      nozzle_timed_out |= thermalManager.is_heater_idle(e);
+      thermalManager.reset_heater_idle_timer(e);
+    }
+
+    if (nozzle_timed_out) ensure_safe_temperature();
+
+    if (load_length != 0) {
+
+      #if ENABLED(ULTIPANEL)
+        // Show "insert filament"
+        if (nozzle_timed_out)
+          lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_INSERT);
+      #endif
+
+      #if ENABLED(ULTIPANEL)
+        // Show "load" message
+        lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_LOAD);
+      #endif
+
+      /// Load filament
+      destination[E_AXIS] += 20;
+      RUNPLAN(ADVANCED_PAUSE_EXTRUDE_FEEDRATE);
+      stepper.synchronize();
+
+      destination[E_AXIS] += load_length;
+      RUNPLAN(FILAMENT_CHANGE_LOAD_FEEDRATE);
+      stepper.synchronize();
+    }
+
+    #if ENABLED(ULTIPANEL) && ADVANCED_PAUSE_EXTRUDE_LENGTH > 0
+
+      float extrude_length = initial_extrude_length;
+    if (extrude_length > 0) {
+          // "Wait for filament extrude"
+          lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_EXTRUDE);
+
+          // Extrude filament to get into hotend
+          destination[E_AXIS] += extrude_length;
+          RUNPLAN(ADVANCED_PAUSE_EXTRUDE_FEEDRATE);
+          stepper.synchronize();
+
+    }
+
+    waits=millis()+2000;
+    unsigned long curr_time;
+    unsigned char timeout_purge;
+    curr_time=millis();
+    timeout_purge=0;
+    KEEPALIVE_STATE(PAUSED_FOR_USER);
+    wait_for_user = true;    // LCD click or M108 will clear this
+
+    while (wait_for_user) {
+      thermalManager.manage_heater();
+      lcd_update();
+      curr_time=millis();
+      if (curr_time>waits){
+        timeout_purge++;
+        tone(BEEPER_PIN, 6000);
+        safe_delay(50);
+        noTone(BEEPER_PIN);
+        lcd_buzz(50,6000);
+        destination[E_AXIS] += 3.0;
+        RUNPLAN(ADVANCED_PAUSE_EXTRUDE_FEEDRATE);
+        stepper.synchronize();
+        waits=millis()+3000;
+      }
+
+      if(timeout_purge ==20){
+        break;
+      }
+
+      idle(true);
+
+    }
+    KEEPALIVE_STATE(IN_HANDLER);
+
+
+    thermalManager.setTargetHotend(0, active_extruder);
+    current_position[E_AXIS] = 0;
+    destination[E_AXIS] = 0;
+    resume_position[E_AXIS] = 0;
+    set_destination_from_current();
+    sync_plan_position_e();
+
+    #if ENABLED(ULTIPANEL)
+      // Show status screen
+      lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
+    #endif
+
+
+    #endif
+}
+
+////////////
+  //////////        M710 - LOAD FILAMENT
+  //////////        BLOCKS MADE
+////////////
+
+inline void gcode_M710(bool filament_runout =  false) {
+
+  SERIAL_ECHOLN(" --LOAD-- ");
+
+  const float &unload_length = 0;
+  const bool show_lcd = true;
+
+  if(!filament_runout){
+  home_all_axes();
+  }
+
+  // Initial retract before move to filament change position
+  const float retract = parser.seen('E') ? parser.value_axis_units(E_AXIS) : 0
+    #ifdef PAUSE_PARK_RETRACT_LENGTH
+      - (PAUSE_PARK_RETRACT_LENGTH)
+    #endif
+  ;
+
+  // Lift Z axis
+  const float z_lift = parser.linearval('Z', 0
+    #ifdef PAUSE_PARK_Z_ADD
+      + PAUSE_PARK_Z_ADD
+    #endif
+  );
+
+
+
+  // Move XY axes to filament exchange position
+  const float x_pos = 0;
+  const float y_pos = 0;
+
+
+  // Load filament
+
+  #ifdef FILAMENT_CHANGE_LOAD_LENGTH
+    const float load_length = FILAMENT_CHANGE_LOAD_LENGTH
+  #endif
+  ;
+
+  const int beep_count = parser.intval('B',
+    #ifdef FILAMENT_CHANGE_NUMBER_OF_ALERT_BEEPS
+    FILAMENT_CHANGE_NUMBER_OF_ALERT_BEEPS
+    #else
+    -1
+    #endif
+  );
+
+  // Initial retract before move to filament change position
+  set_destination_from_current();
+  //destination[Z_AXIS] = z_lift;
+  //RUNPLAN(FILAMENT_CHANGE_LOAD_FEEDRATE);
+  //stepper.synchronize();
+
+  thermalManager.setTargetHotend(220, active_extruder);
+  ensure_safe_temperature(); // wait for extruder to heat up before unloading
+
+  #if ENABLED(ULTIPANEL)
+    lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_INSERT);
+  #endif
+
+
+  //const millis_t nozzle_timeout = (millis_t)(PAUSE_PARK_NOZZLE_TIMEOUT) * 1000UL;
+
+  wait_for_filament_reload(beep_count);
+
+  load_filament(load_length, ADVANCED_PAUSE_EXTRUDE_LENGTH, beep_count);
+  //set_destination_from_current();
+
+}
+
+////////////
+  //////////        M711 - UNLOAD FILAMENT
+  //////////        BLOCKS MADE
+////////////
+inline void gcode_M711(bool filament_runout = false) {
+
+  const bool show_lcd = true;
+
+
+    #if ENABLED(HOME_BEFORE_FILAMENT_CHANGE)
+       //Don't allow filament change without homing first
+      if (axis_unhomed_error())
+    #endif
+    if(!filament_runout){
+      home_all_axes();
+    }
+
+
+    // Initial retract before move to filament change position
+    const float retract = parser.seen('E') ? parser.value_axis_units(E_AXIS) : 0
+      #ifdef PAUSE_PARK_RETRACT_LENGTH
+        - (PAUSE_PARK_RETRACT_LENGTH)
+      #endif
+    ;
+
+    // Unload filament
+    const float unload_length = parser.seen('U') ? parser.value_axis_units(E_AXIS) : 0
+      #if defined(FILAMENT_CHANGE_UNLOAD_LENGTH) && FILAMENT_CHANGE_UNLOAD_LENGTH > 0
+        - (FILAMENT_CHANGE_UNLOAD_LENGTH)
+      #endif
+    ;
+
+
+    // Lift Z axis
+    const float z_lift = parser.linearval('Z', 0
+      #ifdef PAUSE_PARK_Z_ADD
+        + PAUSE_PARK_Z_ADD
+      #endif
+    );
+
+    // Move XY axes to filament exchange position
+    const float x_pos = 0;
+    const float y_pos = 0;
+
+    thermalManager.setTargetHotend(220, active_extruder);
+    ensure_safe_temperature(); // wait for extruder to heat up before unloading
+
+    if (unload_length != 0) {
+      if (show_lcd) {
+        #if ENABLED(ULTIPANEL)
+          lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_UNLOAD);
+          idle();
+        #endif
+      }
+
+    const float small_extrude = 40;
+    current_position[E_AXIS] += small_extrude;
+    set_destination_from_current();
+    RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+    stepper.synchronize();
+
+    current_position[E_AXIS] += unload_length;
+    set_destination_from_current();
+    RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+    stepper.synchronize();
+
+    thermalManager.setTargetHotend(0, active_extruder);
+
+
+    #if ENABLED(ULTIPANEL)
+      // Show status screen
+      lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
+    #endif
+
+    }
+  }
+
+/////////
+  //////
+////////
+
+////////////
+  //////////        M712 - FILAMENT RUNOUT SCRIPT
+  //////////        BLOCKS MADE
+////////////
+  inline void gcode_M712() {
+
+    point_t park_point = NOZZLE_PARK_POINT;
+    // Lift Z axis
+    if (parser.seenval('Z'))
+      park_point.z = parser.linearval('Z');
+
+    // Move XY axes to filament change position or given position
+    if (parser.seenval('X'))
+      park_point.x = parser.linearval('X');
+
+    if (parser.seenval('Y'))
+      park_point.y = parser.linearval('Y');
+
+    #if HOTENDS > 1 && DISABLED(DUAL_X_CARRIAGE)
+      park_point.x += (active_extruder ? hotend_offset[X_AXIS][active_extruder] : 0);
+      park_point.y += (active_extruder ? hotend_offset[Y_AXIS][active_extruder] : 0);
+    #endif
+
+    #if ENABLED(SDSUPPORT)
+      if (card.sdprinting) {
+        card.pauseSDPrint();
+        sd_print_paused = true;
+        SERIAL_ECHO("ENTROU");
+      }
+    #endif
+    print_job_timer.pause();
+
+    stepper.synchronize();
+    COPY(resume_position, current_position);
+
+    const float small_lift = 20;
+    const float medium_retract = 20;
+    current_position[E_AXIS] -= medium_retract;
+    current_position[Z_AXIS] += small_lift;
+    set_destination_from_current();
+    RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+    stepper.synchronize();
+
+    //enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+
+    Nozzle::park(2, park_point);
+
+    gcode_M711(true);
+
+    defer_return_to_status = true;
+    lcd_advanced_pause_show_message(ADVANCED_LOAD_MESSAGE_OPTION);
+
+    do {
+      KEEPALIVE_STATE(PAUSED_FOR_USER);
+      wait_for_user = false;
+      lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_OPTION);
+      while (advanced_pause_menu_response == ADVANCED_PAUSE_RESPONSE_WAIT_FOR) idle(true);
+        KEEPALIVE_STATE(IN_HANDLER);
+    } while (advanced_pause_menu_response == ADVANCED_PAUSE_RESPONSE_EXTRUDE_MORE);
+
+
+    destination[X_AXIS] = current_position[X_AXIS] = -10;
+    destination[Y_AXIS] = current_position[Y_AXIS] = 0;
+    set_destination_from_current();
+    RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+    stepper.synchronize();
+    SERIAL_ECHO("SAIU");
+}
+
+/////////
+  //////
+////////
+
 #if ENABLED(MK2_MULTIPLEXER)
 
   inline void select_multiplexed_stepper(const uint8_t e) {
@@ -12550,13 +12886,28 @@ void process_parsed_command() {
           gcode_M852();
           break;
       #endif
-
+//////
+/////// BLOCKS MADE
+////////
       #if ENABLED(ADVANCED_PAUSE_FEATURE)
         case 600: // M600: Pause for filament change
           gcode_M600();
           break;
-      #endif // ADVANCED_PAUSE_FEATURE
 
+        case 710: // M710: LOAD
+          gcode_M710();
+          break;
+
+        case 711: // M711: UNLOAD
+          gcode_M711();
+          break;
+
+        case 712: // M712: FILAMENT RUNOUT SCRIPT
+          gcode_M712();
+          break;
+      #endif // ADVANCED_PAUSE_FEATURE
+///////
+//////////
       #if ENABLED(DUAL_X_CARRIAGE) || ENABLED(DUAL_NOZZLE_DUPLICATION_MODE)
         case 605: // M605: Set Dual X Carriage movement mode
           gcode_M605();
