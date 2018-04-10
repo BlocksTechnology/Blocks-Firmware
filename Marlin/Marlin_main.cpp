@@ -713,6 +713,17 @@ XYZ_CONSTS_FROM_CONFIG(float, max_length,     MAX_LENGTH);
 XYZ_CONSTS_FROM_CONFIG(float, home_bump_mm,   HOME_BUMP_MM);
 XYZ_CONSTS_FROM_CONFIG(signed char, home_dir, HOME_DIR);
 
+///////
+/////// BLOCKS MADE
+///////
+
+float bed_level_probe;
+float graus = 0;
+float zprobe_zprobe_zoffset;
+extern boolean defer_return_to_status;
+void ensure_safe_temperature();
+//////
+//////
 /**
  * ***************************************************************************
  * ******************************** FUNCTIONS ********************************
@@ -2333,6 +2344,9 @@ static void clean_up_after_endstop_or_probe_move() {
     const float old_feedrate_mm_s = feedrate_mm_s;
     feedrate_mm_s = XY_PROBE_FEEDRATE_MM_S;
 
+    if (rx > X_BED_SIZE/2) {
+      nx = rx - (X_PROBE_LEFT_OFFSET);
+    }
     // Move the probe to the starting XYZ
     do_blocking_move_to(nx, ny, nz);
 
@@ -2366,6 +2380,10 @@ static void clean_up_after_endstop_or_probe_move() {
       LCD_MESSAGEPGM(MSG_ERR_PROBING_FAILED);
       SERIAL_ERROR_START();
       SERIAL_ERRORLNPGM(MSG_ERR_PROBING_FAILED);
+    }
+
+    if (rx > X_BED_SIZE/2) {
+      measured_z = measured_z + zprobe_zprobe_zoffset;
     }
 
     return measured_z;
@@ -6121,6 +6139,215 @@ void home_all_axes() { gcode_G28(true); }
 
 #endif // G38_PROBE_TARGET
 
+//////
+    ////// ASSISTED BED LEVELING - BLOCKS   -     G34
+//////
+
+    #define MARGIN 0.1
+    #define MSG_RIGHT PSTR("-->")
+    #define MSG_LEFT PSTR("<--")
+
+static void lcd_assisted_bed (float &diff_between_point, float &base_point) {
+  char rotate_ins[21];
+  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+
+  while ((diff_between_point >= 0.05) || (diff_between_point <= -0.05)) {
+    graus = 0;
+    graus = diff_between_point * 360;
+    bed_level_probe = round(abs(graus));
+    lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+
+    lcd_assisted_bed_leveling(GRAUS);
+    lcd_update();
+
+
+    KEEPALIVE_STATE(PAUSED_FOR_USER);
+    wait_for_user = true;    // LCD click or M108 will clear this
+    while (wait_for_user) {
+      idle(true);
+    }
+    KEEPALIVE_STATE(IN_HANDLER);
+    wait_for_user = false;
+
+    float xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER);
+    float ypos = parser.linearval('Y', current_position[Y_AXIS] + Y_PROBE_OFFSET_FROM_EXTRUDER);
+
+    if (current_position[X_AXIS] > 95) {
+      xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_LEFT_OFFSET);
+    }
+    float measured_z = 0;
+    diff_between_point = 0;
+    measured_z = probe_pt(xpos, ypos, parser.boolval('E'), 1);
+
+    diff_between_point = base_point - measured_z;
+
+  }
+  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+  lcd_assisted_bed_leveling(OPTION_NEXT_POINT);
+  lcd_update();
+}
+
+inline void gcode_G34() {
+
+  int done = 0;
+  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+  while(done < 1) {
+
+    lcd_assisted_bed_leveling(HEATING_BED);
+    thermalManager.setTargetBed(50);
+    thermalManager.manage_heater();
+
+    if(thermalManager.degBed() > 45) {
+
+      done = 1;
+      fanSpeeds[0] = 255;
+      break;
+    }
+
+    lcd_update();
+  }
+
+  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+  lcd_assisted_bed_leveling(STARTED);
+  lcd_update();
+
+  home_all_axes();
+  float measured_z = 0;
+  float base_point = 0;
+  float diff_between_point = 0;
+
+  // Reference point
+  float xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER);
+  float ypos = parser.linearval('Y', current_position[Y_AXIS] + (Y_BED_SIZE) - 30);
+
+  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+  lcd_assisted_bed_leveling(PROBING);
+  lcd_update();
+
+  measured_z = probe_pt(xpos, ypos, parser.boolval('E'), 1);
+  base_point = measured_z;
+
+  // 1st PROBE
+  xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER);
+  ypos = parser.linearval('Y', current_position[Y_AXIS] - (Y_BED_SIZE) + Y_PROBE_OFFSET_FROM_EXTRUDER + 60);
+
+  lcd_assisted_bed_leveling(PROBING);
+  lcd_update();
+
+  measured_z = 0;
+  measured_z = probe_pt(xpos, ypos, parser.boolval('E'), 1);
+  diff_between_point = base_point - measured_z;
+
+  lcd_assisted_bed(diff_between_point, base_point);
+
+  /// 2º PROBE
+  xpos = parser.linearval('X', current_position[X_AXIS] + X_BED_SIZE + X_PROBE_LEFT_OFFSET + 8);
+  ypos = parser.linearval('Y', current_position[Y_AXIS] + Y_PROBE_OFFSET_FROM_EXTRUDER);
+
+  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+  lcd_assisted_bed_leveling(PROBING);
+  lcd_update();
+
+  measured_z = 0;
+  diff_between_point = 0;
+  measured_z = probe_pt(xpos, ypos, parser.boolval('E'), 1);
+  diff_between_point = base_point - measured_z;
+
+  lcd_assisted_bed(diff_between_point, base_point);
+
+  ////3º PROBE
+  xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_LEFT_OFFSET);
+  ypos = parser.linearval('Y', current_position[Y_AXIS] + (Y_BED_SIZE) + Y_PROBE_OFFSET_FROM_EXTRUDER - 60);
+
+  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+  lcd_assisted_bed_leveling(PROBING);
+  lcd_update();
+
+  measured_z = 0;
+  diff_between_point = 0;
+  measured_z = probe_pt(xpos, ypos, parser.boolval('E'), 1);
+  diff_between_point = base_point - measured_z;
+
+  lcd_assisted_bed(diff_between_point, base_point);
+
+  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+  lcd_assisted_bed_leveling(BED_LEVELING_DONE);
+  lcd_update();
+
+  //// FINAL PROBING
+  //// HOMING
+  thermalManager.setTargetBed(0);
+  enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+  lcd_assisted_bed_leveling(RETURN_STATUS);
+}
+
+// Nozzle offset adjustment
+inline void gcode_G36() {
+  home_all_axes();
+
+  float xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER);
+  float ypos = parser.linearval('Y', current_position[Y_AXIS] + (Y_BED_SIZE) - 30);
+
+  zprobe_zoffset = probe_pt(xpos, ypos, parser.boolval('E'), 1);
+}
+
+// Nozzle heating (for cleanup)
+inline void gcode_G37() {
+  defer_return_to_status = true;
+  thermalManager.setTargetHotend(220, active_extruder);
+  ensure_safe_temperature(); // wait for extruder to heat up before unloading
+  lcd_assisted_bed_leveling(CLEAN_NOZZLE_TWEEZERS);
+  KEEPALIVE_STATE(PAUSED_FOR_USER);
+  wait_for_user = true;    // LCD click or M108 will clear this
+  while (wait_for_user) {
+    idle(true);
+  }
+  KEEPALIVE_STATE(IN_HANDLER);
+  wait_for_user = false;
+  lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
+
+}
+
+//////////////////
+    ////////////// Z OFFSET BETWEEN TWO PROBES - BLOCKS MADE
+    //////////////  this function requires a cube in the middle of the plate
+//////////////////
+inline void gcode_G39() {
+
+  float z_before = 20;
+  float measured_z_left,measured_z_right;
+
+  home_all_axes();
+
+  lcd_assisted_bed_leveling(PIECE_CENTER);
+  lcd_update();
+  KEEPALIVE_STATE(PAUSED_FOR_USER);
+  wait_for_user = true;
+  while (wait_for_user) idle(true);
+
+  lcd_assisted_bed_leveling(PROBING);
+
+  measured_z_left=probe_pt(100, 100, parser.boolval('E'), 1);
+
+  measured_z_right=probe_pt(101, 100, parser.boolval('E'), 1);
+
+  tone(BEEPER_PIN, 6000);
+  delay(50);
+  noTone(BEEPER_PIN);
+  lcd_buzz(50,6000);
+
+  //home_all_axes();
+  enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+
+  zprobe_zprobe_zoffset+=(measured_z_left-measured_z_right);
+  settings.save();
+
+  defer_return_to_status = true;
+  endstops.hit_on_purpose();
+
+  lcd_assisted_bed_leveling(RETURN_STATUS);
+}
+
 #if HAS_MESH
 
   /**
@@ -6440,7 +6667,7 @@ inline void gcode_M17() {
     const millis_t ms = millis();
     if (ELAPSED(ms, next_buzz)) {
       if (max_beep_count < 0 || runout_beep < max_beep_count + 5) { // Only beep as long as we're supposed to
-        next_buzz = ms + ((max_beep_count < 0 || runout_beep < max_beep_count) ? 2500 : 400);
+        next_buzz = ms + ((max_beep_count < 0 || runout_beep < max_beep_count) ? 2500 : 2000);
         BUZZ(300, 2000);
         runout_beep++;
       }
@@ -6578,7 +6805,7 @@ inline void gcode_M17() {
     wait_for_user = true;    // LCD click or M108 will clear this
     while (wait_for_user) {
       #if HAS_BUZZER
-        filament_change_beep(max_beep_count);
+        filament_change_beep(max_beep_count, false);
       #endif
 
       // If the nozzle has timed out, wait for the user to press the button to re-heat the nozzle, then
@@ -6615,7 +6842,7 @@ inline void gcode_M17() {
         nozzle_timed_out = false;
 
         #if HAS_BUZZER
-          filament_change_beep(max_beep_count, true);
+          filament_change_beep(max_beep_count, false);
         #endif
       }
 
@@ -11719,6 +11946,25 @@ void process_parsed_command() {
           break;
       #endif
 
+      ///////////   BLOCKS MADE
+
+      case 34:
+        gcode_G34();    /// Assisted Level Plate
+        break;
+
+      case 36:
+        gcode_G36();    /// Nozzle Adjustment
+        break;
+
+      case 37:
+        gcode_G37();    /// Heating up Nozzle to clean before nozzle Adjustment
+        break;
+
+      case 39:
+        gcode_G39();    /// Calibrate Probes
+        break;
+
+////////////////////////
       case 90: // G90
         relative_mode = false;
         break;

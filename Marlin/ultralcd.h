@@ -29,6 +29,14 @@
 
   #include "Marlin.h"
 
+/////
+///// BLOCKS MADE
+/////
+  extern float bed_level_probe;
+  extern float graus;
+/////
+/////
+
   #if ENABLED(AUTO_BED_LEVELING_UBL) || ENABLED(G26_MESH_VALIDATION)
     extern bool lcd_external_control;
     #if ENABLED(G26_MESH_VALIDATION)
@@ -44,6 +52,7 @@
   int16_t lcd_strlen(const char* s);
   int16_t lcd_strlen_P(const char* s);
   void lcd_update();
+  void lcd_return_to_status();
   void lcd_init();
   bool lcd_hasstatus();
   void lcd_setstatus(const char* message, const bool persist=false);
@@ -100,6 +109,7 @@
 
     #if ENABLED(ADVANCED_PAUSE_FEATURE)
       void lcd_advanced_pause_show_message(const AdvancedPauseMessage message);
+      void lcd_assisted_bed_leveling (const Assistedbedleveling message);
     #endif // ADVANCED_PAUSE_FEATURE
 
   #else
