@@ -6354,9 +6354,9 @@ inline void gcode_G39() {
 
   lcd_assisted_bed_leveling(PROBING);
 
-  measured_z_left=probe_pt(100, 100, parser.boolval('E'), 1);
+  measured_z_left=probe_pt((X_BED_SIZE/2)-1, 100, parser.boolval('E'), 1);
 
-  measured_z_right=probe_pt(101, 100, parser.boolval('E'), 1);
+  measured_z_right=probe_pt((X_BED_SIZE/2)+1, 100, parser.boolval('E'), 1);
 
   tone(BEEPER_PIN, 6000);
   delay(50);
