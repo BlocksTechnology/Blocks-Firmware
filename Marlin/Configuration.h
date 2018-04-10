@@ -879,7 +879,7 @@
 //#define AUTO_BED_LEVELING_BILINEAR
 //#define AUTO_BED_LEVELING_UBL
 //#define MESH_BED_LEVELING
-
+#define AUTO_BED_LEVELING_TWIN_PROBES
 /**
  * Enable detailed logging of G28, G29, M48, etc.
  * Turn on with the command 'M111 S32'.
@@ -995,6 +995,24 @@
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
 
   //#define MESH_G28_REST_ORIGIN // After homing all axes ('G28' or 'G28 XYZ') rest Z at Z_MIN_POS
+#elif ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
+
+  #define X_PROBE_LEFT_OFFSET -25
+  #define X_PROBE_RIGHT_OFFSET 25
+
+  // Set the number of grid points per dimension.
+  #define GRID_MAX_POINTS_X 2
+  #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
+
+  // Set the boundaries for probing (where the probe can reach).
+  #define LEFT_PROBE_BED_POSITION  X_MIN_POS + X_PROBE_RIGHT_OFFSET
+  #define RIGHT_PROBE_BED_POSITION X_MAX_POS + X_PROBE_LEFT_OFFSET
+  #define FRONT_PROBE_BED_POSITION 15
+  #define BACK_PROBE_BED_POSITION 180
+
+  // The Z probe minimum outer margin (to validate G29 parameters).
+  #define MIN_PROBE_EDGE 10
+
 
 #endif // BED_LEVELING
 
