@@ -5410,14 +5410,13 @@ void lcd_reset_alert_level() { lcd_status_message_level = 0; }
 
 void lcd_set_offset()
 {  
-  if (thermalManager.degHotend(0) > 200) {
-    enqueue_and_echo_commands_P(PSTR("G36"));
-    enqueue_and_echo_commands_P(PSTR("G0 X15 F2000")); 
-    enqueue_and_echo_commands_P(PSTR("G0 Z8")); 
-    zprobe_zoffset = 0;
-    settings.save();
-    lcd_goto_screen(lcd_set_offset_screen);
-  }
+  enqueue_and_echo_commands_P(PSTR("G36"));
+  enqueue_and_echo_commands_P(PSTR("G0 X15 F2000")); 
+  enqueue_and_echo_commands_P(PSTR("G0 Z8")); 
+  zprobe_zoffset = 0;
+  settings.save();
+  lcd_goto_screen(lcd_set_offset_screen);
+  
 }
 
 static void lcd_set_offset_screen() {
@@ -5471,8 +5470,8 @@ static void nozzle_adjustment_clean_nozzle()
 {
     START_MENU();
     STATIC_ITEM("Clean Nozzle?");
-    MENU_ITEM(function, "No", lcd_set_offset);
     MENU_ITEM(function, "Yes", continue_nozzle_adjustment_clean_nozzle);
+    MENU_ITEM(function, "No", lcd_set_offset);
     MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
     END_MENU();
 }
