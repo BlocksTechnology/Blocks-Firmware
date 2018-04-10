@@ -49,6 +49,9 @@ void safe_delay(millis_t ms);
   // Convert signed float to fixed-length string with 023.45 / -23.45 format
   char* ftostr32(const float &x);
 
+  // Convert float to string with 123.4 format, dropping sign
+  char *ftostr31(const float &x);
+
   // Convert float to fixed-length string with +123.4 / -123.4 format
   char* ftostr41sign(const float &x);
 

@@ -138,6 +138,21 @@ void safe_delay(millis_t ms) {
     return &conv[1];
   }
 
+  // Convert float to string with 123.4 format, dropping sign
+  char *ftostr31(const float &x)
+  {
+    int xx=x*10;
+    conv[0]=(xx>=0)?'+':'-';
+    xx=abs(xx);
+    conv[1]=(xx/1000)%10+'0';
+    conv[2]=(xx/100)%10+'0';
+    conv[3]=(xx/10)%10+'0';
+    conv[4]='.';
+    conv[5]=(xx)%10+'0';
+    conv[6]=0;
+    return conv;
+  }
+
   #if ENABLED(LCD_DECIMAL_SMALL_XY)
 
     // Convert float to rj string with 1234, _123, -123, _-12, 12.3, _1.2, or -1.2 format
