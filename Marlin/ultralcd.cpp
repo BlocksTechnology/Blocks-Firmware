@@ -5408,12 +5408,6 @@ void lcd_reset_alert_level() { lcd_status_message_level = 0; }
 //// BLOCKS MADE
 ////
 
-void lcd_probe_probe_offset()
-{
-  enqueue_and_echo_commands_P(PSTR("G39"));
-  lcd_return_to_status();
-}
-
 void lcd_set_offset()
 {  
   if (thermalManager.degHotend(0) > 200) {
@@ -5489,7 +5483,7 @@ static void lcd_level_plate()
   START_MENU();
   MENU_ITEM(back, MSG_BACK, lcd_main_menu);
   MENU_ITEM(gcode, MSG_LEVEL_PLATE, PSTR("G34"));
-  MENU_ITEM(submenu, "Calibrate probes", lcd_probe_probe_offset); 
+  MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));
   MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle); 
   END_MENU();    
 }

@@ -6372,7 +6372,7 @@ inline void gcode_G39() {
   defer_return_to_status = true;
   endstops.hit_on_purpose();
 
-  lcd_assisted_bed_leveling(RETURN_STATUS);
+  lcd_return_to_status();
 }
 
 #if HAS_MESH
