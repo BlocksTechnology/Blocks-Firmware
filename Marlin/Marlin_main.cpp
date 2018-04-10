@@ -6281,6 +6281,32 @@ inline void gcode_G34() {
   lcd_assisted_bed_leveling(RETURN_STATUS);
 }
 
+//////////////////
+    ////////////// STOP FUNCTION - BLOCKS MADE
+//////////////////
+inline void gcode_G35() {
+
+  card.sdprinting = false;
+  card.stopSDPrint();
+  card.closefile();
+  thermalManager.disable_all_heaters();
+  #if FAN_COUNT > 0
+    for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
+  #endif
+  wait_for_heatup = false;
+
+  quickstop_stepper();
+  current_position[Z_AXIS]=current_position[Z_AXIS]+20;
+  current_position[E_AXIS]-=30;
+  planner.buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], planner.max_feedrate_mm_s[X_AXIS]/60, active_extruder);
+
+  enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+
+  LCD_MESSAGEPGM(WELCOME_MSG);
+  lcd_update();
+  lcd_return_to_status();
+}
+
 // Nozzle offset adjustment
 inline void gcode_G36() {
   home_all_axes();
@@ -11950,6 +11976,10 @@ void process_parsed_command() {
 
       case 34:
         gcode_G34();    /// Assisted Level Plate
+        break;
+
+      case 35:
+        gcode_G35();    /// Stop Function
         break;
 
       case 36:

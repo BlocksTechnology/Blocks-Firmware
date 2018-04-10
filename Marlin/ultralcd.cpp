@@ -839,10 +839,19 @@ void kill_screen(const char* lcd_msg) {
       quickstop_stepper();
       print_job_timer.stop();
       thermalManager.disable_all_heaters();
+      fanSpeeds[0] = 0;
       #if FAN_COUNT > 0
         for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
       #endif
       wait_for_heatup = false;
+
+      set_current_from_destination();
+      current_position[Z_AXIS]=current_position[Z_AXIS]+20;
+      current_position[E_AXIS]-=30;
+      planner.buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], planner.max_feedrate_mm_s[X_AXIS]/60, active_extruder);
+
+      enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+
       lcd_setstatusPGM(PSTR(MSG_PRINT_ABORTED), -1);
       lcd_return_to_status();
     }
@@ -1691,6 +1700,7 @@ void kill_screen(const char* lcd_msg) {
       for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
     #endif
     thermalManager.disable_all_heaters();
+    fanSpeeds[0] = 255;
     lcd_return_to_status();
   }
 
