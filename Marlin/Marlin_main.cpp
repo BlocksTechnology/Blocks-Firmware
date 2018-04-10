@@ -6321,7 +6321,7 @@ inline void gcode_G36() {
 // Nozzle heating (for cleanup)
 inline void gcode_G37() {
   defer_return_to_status = true;
-  thermalManager.setTargetHotend(220, active_extruder);
+  thermalManager.setTargetHotend(210, active_extruder);
   ensure_safe_temperature(); // wait for extruder to heat up before unloading
   lcd_assisted_bed_leveling(CLEAN_NOZZLE_TWEEZERS);
   KEEPALIVE_STATE(PAUSED_FOR_USER);
@@ -6331,8 +6331,10 @@ inline void gcode_G37() {
   }
   KEEPALIVE_STATE(IN_HANDLER);
   wait_for_user = false;
-  lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
 
+  thermalManager.setTargetHotend(0, active_extruder);
+  lcd_set_offset();
+  defer_return_to_status = false; 
 }
 
 //////////////////

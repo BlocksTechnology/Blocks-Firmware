@@ -5415,13 +5415,15 @@ void lcd_probe_probe_offset()
 }
 
 void lcd_set_offset()
-{
-  enqueue_and_echo_commands_P(PSTR("G36"));
-  enqueue_and_echo_commands_P(PSTR("G0 X15 F2000"));
-  enqueue_and_echo_commands_P(PSTR("G0 Z8"));
-  zprobe_zoffset = 0;
-  settings.save();
-  lcd_goto_screen(lcd_set_offset_screen);
+{  
+  if (thermalManager.degHotend(0) > 200) {
+    enqueue_and_echo_commands_P(PSTR("G36"));
+    enqueue_and_echo_commands_P(PSTR("G0 X15 F2000")); 
+    enqueue_and_echo_commands_P(PSTR("G0 Z8")); 
+    zprobe_zoffset = 0;
+    settings.save();
+    lcd_goto_screen(lcd_set_offset_screen);
+  }
 }
 
 static void lcd_set_offset_screen() {
@@ -5455,21 +5457,10 @@ static void lcd_set_offset_screen() {
 
 }
 
-static void continue_nozzle_adjustment()
-{
-    START_MENU();
-    STATIC_ITEM("Continue?");
-    MENU_ITEM(function, "No", lcd_return_to_status);
-    MENU_ITEM(function, "Yes", lcd_set_offset);
-    //MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
-    END_MENU();
-}
-
-static void config_lcd_level_bed_clean_nozzle()
+static void continue_nozzle_adjustment_clean_nozzle()
 {
   enqueue_and_echo_commands_P(PSTR("G28"));
   enqueue_and_echo_commands_P(PSTR("G37"));
-  //lcd_goto_screen(continue_nozzle_adjustment);
 }
 
 
@@ -5482,12 +5473,12 @@ static void lcd_filament_menu()
     END_MENU();
 }
 
-static void level_bed_ask_clean_nozzle()
+static void nozzle_adjustment_clean_nozzle()
 {
     START_MENU();
     STATIC_ITEM("Clean Nozzle?");
     MENU_ITEM(function, "No", lcd_set_offset);
-    MENU_ITEM(function, "Yes", config_lcd_level_bed_clean_nozzle);
+    MENU_ITEM(function, "Yes", continue_nozzle_adjustment_clean_nozzle);
     MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
     END_MENU();
 }
@@ -5498,9 +5489,9 @@ static void lcd_level_plate()
   START_MENU();
   MENU_ITEM(back, MSG_BACK, lcd_main_menu);
   MENU_ITEM(gcode, MSG_LEVEL_PLATE, PSTR("G34"));
-  MENU_ITEM(submenu, "Calibrate probes", lcd_probe_probe_offset);
-  MENU_ITEM(submenu, "Nozzle Adjustment", level_bed_ask_clean_nozzle);
-  END_MENU();
+  MENU_ITEM(submenu, "Calibrate probes", lcd_probe_probe_offset); 
+  MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle); 
+  END_MENU();    
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
