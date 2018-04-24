@@ -6192,8 +6192,6 @@ inline void gcode_G34() {
 
   int done = 0;
   lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
-  
-  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
   lcd_assisted_bed_leveling(STARTED);
   lcd_update();
 
@@ -6724,7 +6722,7 @@ inline void gcode_M17() {
                           const int8_t max_beep_count = 0, const bool show_lcd = false
   ) {
     if (move_away_flag) return false; // already paused
-
+    int resposta = 0;
     #ifdef ACTION_ON_PAUSE
       SERIAL_ECHOLNPGM("//action:" ACTION_ON_PAUSE);
     #endif
@@ -6783,7 +6781,22 @@ inline void gcode_M17() {
       // Unload filament
       do_pause_e_move(unload_length, FILAMENT_CHANGE_UNLOAD_FEEDRATE);
     }
+
+    do {
+      
+      KEEPALIVE_STATE(PAUSED_FOR_USER);
+      wait_for_user = false;
+      lcd_advanced_pause_show_message(ADVANCED_PAUSE_RESUME_STOP_OPTION);
+      while (advanced_pause_menu_response == ADVANCED_PAUSE_RESPONSE_WAIT_FOR) idle(true);
+      KEEPALIVE_STATE(IN_HANDLER);
+
+     if (advanced_pause_menu_response == ADVANCED_PAUSE_CONTINUE_OPTION) {        
+        resposta = 1;
+        break;
+      }
     
+    }while (advanced_pause_menu_response != ADVANCED_PAUSE_RESPONSE_WAIT_FOR); 
+
     if (show_lcd) {
       #if ENABLED(ULTIPANEL)
         lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_INSERT);
