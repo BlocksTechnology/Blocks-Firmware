@@ -184,6 +184,7 @@ uint16_t max_display_update_time = 0;
   void lcd_probe_probe_offset();
   static void lcd_set_offset();
   static void lcd_set_offset_screen();
+  void lcd_exit_heating_bed_nozzle();
 
 void _EEPROM_writeDatas(int &pos, uint8_t* value, uint8_t size)
 {
@@ -4119,28 +4120,12 @@ void kill_screen(const char* lcd_msg) {
       END_MENU();
     }
 
-    void lcd_return_from_filament() {
-      SERIAL_ECHO("ENTROU C C C C C ");
-      defer_return_to_status = false;
-      thermalManager.disable_all_heaters();
-      lcd_return_to_status();
-    }
-
     void lcd_advanced_pause_resume_print() {
       advanced_pause_menu_response = ADVANCED_PAUSE_RESPONSE_RESUME_PRINT;
-      enqueue_and_echo_commands_P(PSTR("M710"));
     }
 
     void lcd_advanced_pause_extrude_more() {
       advanced_pause_menu_response = ADVANCED_PAUSE_RESPONSE_EXTRUDE_MORE;
-    }
-
-    void lcd_break_load()  {
-      enqueue_and_echo_commands_P(PSTR("G35"));
-      advanced_pause_menu_response == ADVANCED_PAUSE_RESPONSE_EXTRUDE_MORE;
-
-      //advanced_pause_menu_response = ADVANCED_BREAK_LOAD;
-
     }
 
     void lcd_advanced_pause_option_menu() {
@@ -4149,7 +4134,21 @@ void kill_screen(const char* lcd_msg) {
         STATIC_ITEM(MSG_FILAMENT_CHANGE_OPTION_HEADER, true, false);
       #endif
       MENU_ITEM(function, MSG_FILAMENT_CHANGE_OPTION_RESUME, lcd_advanced_pause_resume_print);
-      MENU_ITEM(function, MSG_STOP_PRINT, lcd_break_load);
+      MENU_ITEM(function, MSG_FILAMENT_CHANGE_OPTION_EXTRUDE, lcd_advanced_pause_extrude_more);
+      END_MENU();
+    }
+
+    void lcd_advanced_pause_continue_print() {
+      advanced_pause_menu_response = ADVANCED_PAUSE_CONTINUE_OPTION;
+    }
+    
+    void lcd_advanced_resume_stop_option_menu() {
+      START_MENU();
+      #if LCD_HEIGHT > 2
+        STATIC_ITEM(MSG_FILAMENT_CHANGE_OPTION_HEADER, true, false);
+      #endif
+      MENU_ITEM(function, "Continue Print", lcd_advanced_pause_continue_print);
+      MENU_ITEM(function, "Stop", lcd_exit_heating_bed_nozzle);
       END_MENU();
     }
 
@@ -4200,10 +4199,9 @@ void kill_screen(const char* lcd_msg) {
     }
 
     void lcd_advanced_pause_wait_for_nozzles_to_heat() {
-      START_MENU();
-      STATIC_ITEM("HEATING NOZZLE", true, true);
+      START_SCREEN();
+      STATIC_ITEM(MSG_FILAMENT_CHANGE_HEADER, true, true);
       STATIC_ITEM(MSG_FILAMENT_CHANGE_HEATING_1);
-
       #ifdef MSG_FILAMENT_CHANGE_HEATING_2
         STATIC_ITEM(MSG_FILAMENT_CHANGE_HEATING_2);
         #define _FC_LINES_C 3
@@ -4213,9 +4211,8 @@ void kill_screen(const char* lcd_msg) {
       #if LCD_HEIGHT > _FC_LINES_C + 1
         STATIC_ITEM(" ");
       #endif
-      //MENU_ITEM(function, MSG_BACK, lcd_return_from_filament);
       HOTEND_STATUS_ITEM();
-      END_MENU();
+      END_SCREEN();
     }
 
     void lcd_advanced_pause_heat_nozzle() {
@@ -4236,7 +4233,7 @@ void kill_screen(const char* lcd_msg) {
     }
 
     void lcd_advanced_pause_insert_message() {
-      START_MENU();
+      START_SCREEN();
       STATIC_ITEM(MSG_FILAMENT_CHANGE_HEADER, true, true);
       STATIC_ITEM(MSG_FILAMENT_CHANGE_INSERT_1);
       #ifdef MSG_FILAMENT_CHANGE_INSERT_2
@@ -4254,10 +4251,8 @@ void kill_screen(const char* lcd_msg) {
       #if LCD_HEIGHT > _FC_LINES_E + 1
         STATIC_ITEM(" ");
       #endif
-      //MENU_ITEM(function, MSG_BACK, lcd_return_from_filament);
       HOTEND_STATUS_ITEM();
-      END_MENU();
-
+      END_SCREEN();
     }
 
     void lcd_advanced_pause_load_message() {
@@ -4283,18 +4278,6 @@ void kill_screen(const char* lcd_msg) {
       END_SCREEN();
     }
 
-
-
-    void lcd_advanced_load_option_menu() {
-      START_MENU();
-      #if LCD_HEIGHT > 2
-        STATIC_ITEM(MSG_FILAMENT_CHANGE_OPTION_HEADER, true, false);
-      #endif
-      MENU_ITEM(function, MSG_STOP_PRINT, lcd_break_load);
-      MENU_ITEM(function, MSG_FILAMENT_CHANGE_OPTION_EXTRUDE, lcd_advanced_pause_extrude_more);
-      END_MENU();
-    }
-
     void lcd_advanced_pause_extrude_message() {
       START_SCREEN();
       STATIC_ITEM(MSG_FILAMENT_CHANGE_HEADER, true, true);
@@ -4312,7 +4295,7 @@ void kill_screen(const char* lcd_msg) {
         #define _FC_LINES_G __FC_LINES_G
       #endif
       #if LCD_HEIGHT > _FC_LINES_G + 1
-        STATIC_ITEM("and press the button");
+        STATIC_ITEM(" ");
       #endif
       HOTEND_STATUS_ITEM();
       END_SCREEN();
@@ -4366,10 +4349,10 @@ void kill_screen(const char* lcd_msg) {
           advanced_pause_menu_response = ADVANCED_PAUSE_RESPONSE_WAIT_FOR;
           lcd_goto_screen(lcd_advanced_pause_option_menu);
           break;
-        case ADVANCED_LOAD_MESSAGE_OPTION:
+        case ADVANCED_PAUSE_RESUME_STOP_OPTION:
           defer_return_to_status = true;
           advanced_pause_menu_response = ADVANCED_PAUSE_RESPONSE_WAIT_FOR;
-          lcd_goto_screen(lcd_advanced_load_option_menu);
+          lcd_goto_screen(lcd_advanced_resume_stop_option_menu);
           break;
         case ADVANCED_PAUSE_MESSAGE_RESUME:
           defer_return_to_status = true;
@@ -4381,10 +4364,9 @@ void kill_screen(const char* lcd_msg) {
       }
     }
 
-
     void next_point() {
       START_SCREEN();
-      STATIC_ITEM("Proximo ponto");
+      STATIC_ITEM("Next Point");
       END_SCREEN();
     }
 
@@ -4394,30 +4376,6 @@ void kill_screen(const char* lcd_msg) {
       STATIC_ITEM("Assisted Bed");
       STATIC_ITEM("Leveling");
       END_SCREEN();
-    }
-
-    void heating_bed() {
-      START_MENU();
-      MENU_BACK(MSG_BACK);
-
-      //STATIC_ITEM("");
-      STATIC_ITEM("Assisted Bed");
-      STATIC_ITEM("Leveling");
-      STATIC_ITEM("Heating Bed...");
-      END_MENU();
-      //int tHotend=int(degHotend(0) + 0.5);
-      //int tTarget=int(degTargetHotend(0) + 0.5);
-    //u8g.setPrintPos(60, 50);
-    //lcd_printPGM(PSTR(MSG_HEATING));
-    u8g.setPrintPos(50, 30);
-    u8g.print(LCD_STR_THERMOMETER[0]);
-    u8g.print(itostr3(thermalManager.degTargetBed()));
-    u8g.print('/');
-    u8g.print(itostr3left(thermalManager.degBed()));
-    lcd_printPGM(PSTR(LCD_STR_DEGREE " "));
-      //MENU_ITEM(function, MSG_BACK, lcd_return_from_filament);
-      //BED_STATUS_ITEM();
-      //END_MENU();
     }
 
     void probing() {
@@ -4449,8 +4407,8 @@ void kill_screen(const char* lcd_msg) {
     void turn_degrees() {
       START_SCREEN();
       STATIC_ITEM(" ");
-      u8g.setPrintPos(10, 34);
-      lcd_print("Turn");
+      u8g.setPrintPos(8, 34);
+      lcd_print("Turn ");
       lcd_print(itostr3(bed_level_probe));
       if (graus > 0) {
         lcd_print(" degrees <--");
@@ -4484,10 +4442,6 @@ void kill_screen(const char* lcd_msg) {
           break;
         case RETURN_STATUS:
           lcd_return_to_status();
-          break;
-        case HEATING_BED:
-          defer_return_to_status = true;
-          lcd_goto_screen(heating_bed);
           break;
         case PROBING:
           defer_return_to_status = true;
@@ -5456,16 +5410,6 @@ static void continue_nozzle_adjustment_clean_nozzle()
   enqueue_and_echo_commands_P(PSTR("G37"));
 }
 
-
-static void lcd_filament_menu()
-{
-    START_MENU();
-    MENU_ITEM(back, MSG_BACK, lcd_main_menu);
-    MENU_ITEM(gcode, MSG_LOAD, PSTR("M710"));
-    MENU_ITEM(gcode, MSG_UNLOAD, PSTR("M711"));
-    END_MENU();
-}
-
 static void nozzle_adjustment_clean_nozzle()
 {
     START_MENU();
@@ -5475,13 +5419,74 @@ static void nozzle_adjustment_clean_nozzle()
     MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
     END_MENU();
 }
+static void lcd_exit_heating_bed_nozzle() {
+  defer_return_to_status = false;
+  thermalManager.setTargetBed(0);
+  thermalManager.setTargetHotend(0,0);
+  thermalManager.disable_all_heaters();
+  lcd_goto_screen(lcd_status_screen);
+}
+
+static void heating_nozzle_load_screen() {  
+  defer_return_to_status = true;  
+  thermalManager.setTargetHotend(220,0);
+  START_MENU();
+  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed_nozzle);  
+  STATIC_ITEM(MSG_FILAMENT_LOAD_HEADER);
+  STATIC_ITEM("Heating nozzle");
+  STATIC_ITEM("Please wait...");   
+  HOTEND_STATUS_ITEM();
+  END_MENU();
+  if(thermalManager.degHotend(0) > 215) {
+      enqueue_and_echo_commands_P(PSTR("M710"));        
+  }
+}
+
+static void heating_nozzle_unload_screen() {  
+  defer_return_to_status = true;  
+  thermalManager.setTargetHotend(220,0);
+  START_MENU();
+  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed_nozzle);  
+  STATIC_ITEM(MSG_FILAMENT_UNLOAD_HEADER);
+  STATIC_ITEM("Heating nozzle");
+  STATIC_ITEM("Please wait..."); 
+  HOTEND_STATUS_ITEM();
+  END_MENU();
+  if(thermalManager.degHotend(0) > 215) {
+      enqueue_and_echo_commands_P(PSTR("M711"));        
+  }
+}
+
+static void heating_bed_screen() {  
+  defer_return_to_status = true;  
+  thermalManager.setTargetBed(50);
+  START_MENU();
+  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed_nozzle);  
+  STATIC_ITEM("Assisted Bed");
+  STATIC_ITEM("Leveling");
+  STATIC_ITEM("Heating bed...");
+  BED_STATUS_ITEM();
+  END_MENU();
+  if(thermalManager.degBed() > 45) {
+      enqueue_and_echo_commands_P(PSTR("G34"));      
+  }
+}
+
+static void lcd_filament_menu()
+{
+    START_MENU();
+    MENU_ITEM(back, MSG_BACK, lcd_main_menu);
+    MENU_ITEM(submenu, MSG_LOAD, heating_nozzle_load_screen);
+    MENU_ITEM(submenu, MSG_UNLOAD, heating_nozzle_unload_screen);
+    END_MENU();
+}
 
 
 static void lcd_level_plate()
 {
   START_MENU();
   MENU_ITEM(back, MSG_BACK, lcd_main_menu);
-  MENU_ITEM(gcode, MSG_LEVEL_PLATE, PSTR("G34"));
+  MENU_ITEM(submenu, MSG_LEVEL_PLATE, heating_bed_screen);
   MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));
   MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle); 
   END_MENU();    

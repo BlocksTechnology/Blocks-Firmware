@@ -6192,20 +6192,7 @@ inline void gcode_G34() {
 
   int done = 0;
   lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
-  while(done < 1) {
-
-    lcd_assisted_bed_leveling(HEATING_BED);
-    thermalManager.setTargetBed(50);
-    thermalManager.manage_heater();
-
-    if(thermalManager.degBed() > 45) {
-      done = 1;
-      break;
-    }
-
-    lcd_update();
-  }
-
+  
   lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
   lcd_assisted_bed_leveling(STARTED);
   lcd_update();
@@ -6712,7 +6699,7 @@ inline void gcode_M17() {
         if (thermalManager.degTargetHotend(e) && abs(thermalManager.degHotend(e) - thermalManager.degTargetHotend(e)) > TEMP_HYSTERESIS) {
           heaters_heating = true;
           #if ENABLED(ULTIPANEL)
-            lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_WAIT_FOR_NOZZLES_TO_HEAT);
+            //lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_WAIT_FOR_NOZZLES_TO_HEAT);
           #endif
           break;
         }
@@ -6796,7 +6783,7 @@ inline void gcode_M17() {
       // Unload filament
       do_pause_e_move(unload_length, FILAMENT_CHANGE_UNLOAD_FEEDRATE);
     }
-
+    
     if (show_lcd) {
       #if ENABLED(ULTIPANEL)
         lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_INSERT);
