@@ -6317,7 +6317,7 @@ inline void gcode_G37() {
 
   thermalManager.setTargetHotend(0, active_extruder);
   lcd_set_offset();
-  defer_return_to_status = false; 
+  defer_return_to_status = false;
 }
 
 //////////////////
@@ -6782,18 +6782,18 @@ inline void gcode_M17() {
     }
 
     do {
-      
+
       KEEPALIVE_STATE(PAUSED_FOR_USER);
       wait_for_user = false;
       lcd_advanced_pause_show_message(ADVANCED_PAUSE_RESUME_STOP_OPTION);
       while (advanced_pause_menu_response == ADVANCED_PAUSE_RESPONSE_WAIT_FOR) idle(true);
       KEEPALIVE_STATE(IN_HANDLER);
 
-     if (advanced_pause_menu_response == ADVANCED_PAUSE_CONTINUE_OPTION) {        
+     if (advanced_pause_menu_response == ADVANCED_PAUSE_CONTINUE_OPTION) {
         resposta = 1;
         break;
-      }    
-    }while (advanced_pause_menu_response != ADVANCED_PAUSE_RESPONSE_WAIT_FOR); 
+      }
+    }while (advanced_pause_menu_response != ADVANCED_PAUSE_RESPONSE_WAIT_FOR);
 
     if (show_lcd) {
       #if ENABLED(ULTIPANEL)
@@ -10442,9 +10442,8 @@ inline void gcode_M710() {
 
   const float &unload_length = 0;
   const bool show_lcd = true;
- 
   home_all_axes();
-  
+
   // Initial retract before move to filament change position
   const float retract = parser.seen('E') ? parser.value_axis_units(E_AXIS) : 0
     #ifdef PAUSE_PARK_RETRACT_LENGTH
@@ -10476,7 +10475,7 @@ inline void gcode_M710() {
 
   // Initial retract before move to filament change position
   set_destination_from_current();
-  
+
   thermalManager.setTargetHotend(220, active_extruder);
   ensure_safe_temperature(); // wait for extruder to heat up before unloading
 
@@ -10486,7 +10485,7 @@ inline void gcode_M710() {
 
   wait_for_filament_reload(beep_count);
 
-  load_filament(load_length, ADVANCED_PAUSE_EXTRUDE_LENGTH, beep_count);  
+  load_filament(load_length, ADVANCED_PAUSE_EXTRUDE_LENGTH, beep_count);
 
 }
 
@@ -10495,7 +10494,6 @@ inline void gcode_M710() {
   //////////        BLOCKS MADE
 ////////////
 inline void gcode_M711() {
-  
   const bool show_lcd = true;
 
   home_all_axes();
@@ -10549,7 +10547,7 @@ inline void gcode_M711() {
       stepper.synchronize();
       thermalManager.setTargetHotend(0, 0);
 
-      
+
     }
     thermalManager.setTargetHotend(0, 0);
     enqueue_and_echo_commands_P(PSTR("G28 X Y"));
@@ -14282,11 +14280,11 @@ void prepare_move_to_destination() {
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
 
   void handle_filament_runout() {
-   
-      
+
+
       enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
       stepper.synchronize();
-    
+
   }
 
 #endif // FILAMENT_RUNOUT_SENSOR
