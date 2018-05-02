@@ -211,7 +211,7 @@ MarlinSettings settings;
   #include "ubl.h"
 #endif
 
-#if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+#if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
   extern void refresh_bed_level();
 #endif
 
@@ -254,7 +254,7 @@ void MarlinSettings::postprocess() {
     set_z_fade_height(new_z_fade_height, false); // false = no report
   #endif
 
-  #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+  #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
     refresh_bed_level();
     //set_bed_leveling_enabled(leveling_is_on);
   #endif
@@ -423,7 +423,7 @@ void MarlinSettings::postprocess() {
     // Bilinear Auto Bed Leveling
     //
 
-    #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+    #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
       // Compile time test that sizeof(z_values) is as expected
       static_assert(
         sizeof(z_values) == GRID_MAX_POINTS * sizeof(z_values[0][0]),
@@ -899,7 +899,7 @@ void MarlinSettings::postprocess() {
       uint8_t grid_max_x, grid_max_y;
       EEPROM_READ(grid_max_x);                       // 1 byte
       EEPROM_READ(grid_max_y);                       // 1 byte
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
         if (grid_max_x == GRID_MAX_POINTS_X && grid_max_y == GRID_MAX_POINTS_Y) {
           set_bed_leveling_enabled(false);
           EEPROM_READ(bilinear_grid_spacing);        // 2 ints

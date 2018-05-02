@@ -634,7 +634,7 @@ void Planner::check_axes_activity() {
         constexpr float fade_scaling_factor = 1.0;
       #endif
 
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
         const float raw[XYZ] = { rx, ry, 0 };
       #endif
 
@@ -647,7 +647,7 @@ void Planner::check_axes_activity() {
               , fade_scaling_factor
             #endif
           )
-        #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+        #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
           bilinear_z_offset(raw) * fade_scaling_factor
         #else
           0
@@ -690,7 +690,7 @@ void Planner::check_axes_activity() {
                 , fade_scaling_factor
               #endif
             )
-          #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+          #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
             bilinear_z_offset(raw) * fade_scaling_factor
           #else
             0

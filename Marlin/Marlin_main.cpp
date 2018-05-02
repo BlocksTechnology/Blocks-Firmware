@@ -530,7 +530,7 @@ uint8_t target_extruder;
   #define XY_PROBE_FEEDRATE_MM_S PLANNER_XY_FEEDRATE()
 #endif
 
-#if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+#if ENABLED(AUTO_BED_LEVELING_BILINEAR)  || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
   #if ENABLED(DELTA)
     #define ADJUST_DELTA(V) \
       if (planner.leveling_active) { \
@@ -618,7 +618,7 @@ uint8_t target_extruder;
 
 #endif
 
-#if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+#if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
   int bilinear_grid_spacing[2], bilinear_start[2];
   float bilinear_grid_factor[2],
         z_values[GRID_MAX_POINTS_X][GRID_MAX_POINTS_Y];
@@ -645,9 +645,7 @@ float cartes[XYZ] = { 0 };
          filwidth_delay_index[2] = { 0, -1 };                   // Indexes into ring buffer
 #endif
 
-#if ENABLED(FILAMENT_RUNOUT_SENSOR)
-  static bool filament_ran_out = false;
-#endif
+
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   AdvancedPauseMenuResponse advanced_pause_menu_response;
@@ -2398,7 +2396,7 @@ static void clean_up_after_endstop_or_probe_move() {
     return
       #if ENABLED(MESH_BED_LEVELING)
         mbl.has_mesh
-      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
         !!bilinear_grid_spacing[X_AXIS]
       #elif ENABLED(AUTO_BED_LEVELING_UBL)
         true
@@ -2417,7 +2415,7 @@ static void clean_up_after_endstop_or_probe_move() {
    */
   void set_bed_leveling_enabled(const bool enable/*=true*/) {
 
-    #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+    #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
       const bool can_change = (!enable || leveling_is_valid());
     #else
       constexpr bool can_change = true;
@@ -2452,7 +2450,7 @@ static void clean_up_after_endstop_or_probe_move() {
 
       #else // ABL
 
-        #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+        #if ENABLED(AUTO_BED_LEVELING_BILINEAR)  || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
           // Force bilinear_z_offset to re-calculate next time
           const float reset[XYZ] = { -9999.999, -9999.999, 0 };
           (void)bilinear_z_offset(reset);
@@ -2532,7 +2530,7 @@ static void clean_up_after_endstop_or_probe_move() {
       }
     #elif ENABLED(AUTO_BED_LEVELING_UBL)
       ubl.reset();
-    #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+    #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)  || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
       bilinear_start[X_AXIS] = bilinear_start[Y_AXIS] =
       bilinear_grid_spacing[X_AXIS] = bilinear_grid_spacing[Y_AXIS] = 0;
       for (uint8_t x = 0; x < GRID_MAX_POINTS_X; x++)
@@ -2545,7 +2543,7 @@ static void clean_up_after_endstop_or_probe_move() {
 
 #endif // HAS_LEVELING
 
-#if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(MESH_BED_LEVELING)
+#if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(MESH_BED_LEVELING)  || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
   /**
    * Enable to produce output in JSON format suitable
@@ -2615,7 +2613,7 @@ static void clean_up_after_endstop_or_probe_move() {
 
 #endif
 
-#if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+#if ENABLED(AUTO_BED_LEVELING_BILINEAR)  || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
   /**
    * Extrapolate a single point from its neighbors
@@ -3800,7 +3798,7 @@ inline void gcode_G4() {
       SERIAL_ECHOPGM("Auto Bed Leveling: ");
       #if ENABLED(AUTO_BED_LEVELING_LINEAR)
         SERIAL_ECHOPGM("LINEAR");
-      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)  || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
         SERIAL_ECHOPGM("BILINEAR");
       #elif ENABLED(AUTO_BED_LEVELING_3POINT)
         SERIAL_ECHOPGM("3POINT");
@@ -3826,7 +3824,7 @@ inline void gcode_G4() {
           SERIAL_ECHO(diff[Z_AXIS]);
         #elif ENABLED(AUTO_BED_LEVELING_UBL)
           SERIAL_ECHOPAIR("UBL Adjustment Z", stepper.get_axis_position_mm(Z_AXIS) - current_position[Z_AXIS]);
-        #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+        #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)  || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
           SERIAL_ECHOPAIR("ABL Adjustment Z", bilinear_z_offset(current_position));
         #endif
       }
@@ -4577,11 +4575,11 @@ void home_all_axes() { gcode_G28(true); }
         int constexpr abl2 = GRID_MAX_POINTS;
       #endif
 
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
         ABL_VAR float zoffset;
 
-      #elif ENABLED(AUTO_BED_LEVELING_LINEAR)
+      #elif ENABLED(AUTO_BED_LEVELING_LINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
         ABL_VAR int indexIntoAB[GRID_MAX_POINTS_X][GRID_MAX_POINTS_Y];
 
@@ -4621,7 +4619,7 @@ void home_all_axes() { gcode_G28(true); }
 
       abl_should_enable = planner.leveling_active;
 
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
         if (parser.seen('W')) {
           if (!leveling_is_valid()) {
@@ -4699,7 +4697,7 @@ void home_all_axes() { gcode_G28(true); }
         abl2 = abl_grid_points_x * abl_grid_points_y;
         mean = 0;
 
-      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
         zoffset = parser.linearval('Z');
 
@@ -4771,7 +4769,7 @@ void home_all_axes() { gcode_G28(true); }
 
       if (!faux) setup_for_endstop_or_probe_move();
 
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
         #if ENABLED(PROBE_MANUALLY)
           if (!no_action)
@@ -4865,7 +4863,7 @@ void home_all_axes() { gcode_G28(true); }
 
           incremental_LSF(&lsf_results, xProbe, yProbe, measured_z);
 
-        #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+        #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
           z_values[xCount][yCount] = measured_z + zoffset;
 
@@ -5044,7 +5042,7 @@ void home_all_axes() { gcode_G28(true); }
 
               incremental_LSF(&lsf_results, xProbe, yProbe, measured_z);
 
-            #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+            #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
               z_values[xCount][yCount] = measured_z + zoffset;
 
@@ -5118,7 +5116,7 @@ void home_all_axes() { gcode_G28(true); }
 
     // Calculate leveling, print reports, correct the position
     if (!isnan(measured_z)) {
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
         if (!dryrun) extrapolate_unprobed_bed_level();
         print_bilinear_leveling_grid();
@@ -5284,7 +5282,7 @@ void home_all_axes() { gcode_G28(true); }
           #endif
         }
 
-      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
         if (!dryrun) {
           #if ENABLED(DEBUG_LEVELING_FEATURE)
@@ -9924,7 +9922,7 @@ void quickstop_stepper() {
         planner.bed_level_matrix.debug(PSTR("Bed Level Correction Matrix:"));
       #else
         if (leveling_is_valid()) {
-          #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+          #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
             print_bilinear_leveling_grid();
             #if ENABLED(ABL_BILINEAR_SUBDIVISION)
               print_bilinear_leveling_grid_virt();
@@ -10002,7 +10000,7 @@ void quickstop_stepper() {
       mbl.set_z(ix, iy, parser.value_linear_units() + (hasQ ? mbl.z_values[ix][iy] : 0));
   }
 
-#elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+#elif ENABLED(AUTO_BED_LEVELING_BILINEAR)  || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
   /**
    * M421: Set a single Mesh Bed Leveling Z coordinate
@@ -13191,7 +13189,7 @@ void ok_to_send() {
 
 #endif
 
-#if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+#if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
   #if ENABLED(ABL_BILINEAR_SUBDIVISION)
     #define ABL_BG_SPACING(A) bilinear_grid_spacing_virt[A]
@@ -13674,7 +13672,7 @@ void set_current_from_steppers_for_axis(const AxisEnum axis) {
     mesh_line_to_destination(fr_mm_s, x_splits, y_splits);
   }
 
-#elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+#elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
   #define CELL_INDEX(A,V) ((V - bilinear_start[A##_AXIS]) * ABL_BG_FACTOR(A##_AXIS))
 
@@ -13895,7 +13893,7 @@ void set_current_from_steppers_for_axis(const AxisEnum axis) {
           if (current_position[X_AXIS] != destination[X_AXIS] || current_position[Y_AXIS] != destination[Y_AXIS]) {
             #if ENABLED(MESH_BED_LEVELING)
               mesh_line_to_destination(MMS_SCALED(feedrate_mm_s));
-            #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+            #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
               bilinear_line_to_destination(MMS_SCALED(feedrate_mm_s));
             #endif
             return true;

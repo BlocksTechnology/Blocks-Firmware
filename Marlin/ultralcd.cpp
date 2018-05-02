@@ -3982,7 +3982,7 @@ void kill_screen(const char* lcd_msg) {
         STATIC_ITEM(MSG_3POINT_LEVELING, true);                        // 3-Point Leveling
       #elif ENABLED(AUTO_BED_LEVELING_LINEAR)
         STATIC_ITEM(MSG_LINEAR_LEVELING, true);                        // Linear Leveling
-      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+      #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
         STATIC_ITEM(MSG_BILINEAR_LEVELING, true);                      // Bi-linear Leveling
       #elif ENABLED(AUTO_BED_LEVELING_UBL)
         STATIC_ITEM(MSG_UBL_LEVELING, true);                           // Unified Bed Leveling

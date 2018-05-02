@@ -345,7 +345,7 @@ void report_current_position();
   constexpr bool g26_debug_flag = false;
 #endif
 
-#if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+#if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
   #define _GET_MESH_X(I) (bilinear_start[X_AXIS] + (I) * bilinear_grid_spacing[X_AXIS])
   #define _GET_MESH_Y(J) (bilinear_start[Y_AXIS] + (J) * bilinear_grid_spacing[Y_AXIS])
 #elif ENABLED(AUTO_BED_LEVELING_UBL)
@@ -356,7 +356,7 @@ void report_current_position();
   #define _GET_MESH_Y(J) mbl.index_to_ypos[J]
 #endif
 
-#if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+#if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
   extern int bilinear_grid_spacing[2], bilinear_start[2];
   extern float bilinear_grid_factor[2],
                z_values[GRID_MAX_POINTS_X][GRID_MAX_POINTS_Y];
