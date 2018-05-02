@@ -721,6 +721,7 @@ float zprobe_zprobe_zoffset;
 extern boolean defer_return_to_status;
 void ensure_safe_temperature();
 bool printing_from_wifi =  false;
+int filament_control_lu = 0;
 //////
 //////
 /**
@@ -6189,6 +6190,7 @@ static void lcd_assisted_bed (float &diff_between_point, float &base_point) {
 inline void gcode_G34() {
 
   int done = 0;
+
   lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
   lcd_assisted_bed_leveling(STARTED);
   lcd_update();
@@ -6686,7 +6688,6 @@ inline void gcode_M17() {
 
   static void ensure_safe_temperature() {
     bool heaters_heating = true;
-
     wait_for_heatup = true;    // M108 will clear this
     while (wait_for_heatup && heaters_heating) {
       idle();
@@ -6695,7 +6696,7 @@ inline void gcode_M17() {
         if (thermalManager.degTargetHotend(e) && abs(thermalManager.degHotend(e) - thermalManager.degTargetHotend(e)) > TEMP_HYSTERESIS) {
           heaters_heating = true;
           #if ENABLED(ULTIPANEL)
-            //lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_WAIT_FOR_NOZZLES_TO_HEAT);
+            lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_WAIT_FOR_NOZZLES_TO_HEAT);
           #endif
           break;
         }
@@ -6791,8 +6792,7 @@ inline void gcode_M17() {
      if (advanced_pause_menu_response == ADVANCED_PAUSE_CONTINUE_OPTION) {        
         resposta = 1;
         break;
-      }
-    
+      }    
     }while (advanced_pause_menu_response != ADVANCED_PAUSE_RESPONSE_WAIT_FOR); 
 
     if (show_lcd) {
@@ -6962,10 +6962,6 @@ inline void gcode_M17() {
     // Move XY to starting position, then Z
     do_blocking_move_to_xy(resume_position[X_AXIS], resume_position[Y_AXIS], NOZZLE_PARK_XY_FEEDRATE);
     do_blocking_move_to_z(resume_position[Z_AXIS], NOZZLE_PARK_Z_FEEDRATE);
-
-    #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-      filament_ran_out = false;
-    #endif
 
     #if ENABLED(ULTIPANEL)
       // Show status screen
@@ -10429,11 +10425,8 @@ static void load_filament(const float &load_length = 0, const float &initial_ext
     set_destination_from_current();
     sync_plan_position_e();
 
-    #if ENABLED(ULTIPANEL)
-      // Show status screen
-      lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
-    #endif
-
+    enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+    lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
 
     #endif
 }
@@ -10443,17 +10436,15 @@ static void load_filament(const float &load_length = 0, const float &initial_ext
   //////////        BLOCKS MADE
 ////////////
 
-inline void gcode_M710(bool filament_runout =  false) {
+inline void gcode_M710() {
 
   SERIAL_ECHOLN(" --LOAD-- ");
 
   const float &unload_length = 0;
   const bool show_lcd = true;
-
-  if(!filament_runout){
+ 
   home_all_axes();
-  }
-
+  
   // Initial retract before move to filament change position
   const float retract = parser.seen('E') ? parser.value_axis_units(E_AXIS) : 0
     #ifdef PAUSE_PARK_RETRACT_LENGTH
@@ -10467,13 +10458,6 @@ inline void gcode_M710(bool filament_runout =  false) {
       + PAUSE_PARK_Z_ADD
     #endif
   );
-
-
-
-  // Move XY axes to filament exchange position
-  const float x_pos = 0;
-  const float y_pos = 0;
-
 
   // Load filament
 
@@ -10492,10 +10476,7 @@ inline void gcode_M710(bool filament_runout =  false) {
 
   // Initial retract before move to filament change position
   set_destination_from_current();
-  //destination[Z_AXIS] = z_lift;
-  //RUNPLAN(FILAMENT_CHANGE_LOAD_FEEDRATE);
-  //stepper.synchronize();
-
+  
   thermalManager.setTargetHotend(220, active_extruder);
   ensure_safe_temperature(); // wait for extruder to heat up before unloading
 
@@ -10503,13 +10484,9 @@ inline void gcode_M710(bool filament_runout =  false) {
     lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_INSERT);
   #endif
 
-
-  //const millis_t nozzle_timeout = (millis_t)(PAUSE_PARK_NOZZLE_TIMEOUT) * 1000UL;
-
   wait_for_filament_reload(beep_count);
 
-  load_filament(load_length, ADVANCED_PAUSE_EXTRUDE_LENGTH, beep_count);
-  //set_destination_from_current();
+  load_filament(load_length, ADVANCED_PAUSE_EXTRUDE_LENGTH, beep_count);  
 
 }
 
@@ -10517,48 +10494,40 @@ inline void gcode_M710(bool filament_runout =  false) {
   //////////        M711 - UNLOAD FILAMENT
   //////////        BLOCKS MADE
 ////////////
-inline void gcode_M711(bool filament_runout = false) {
-
+inline void gcode_M711() {
+  
   const bool show_lcd = true;
 
-
-    #if ENABLED(HOME_BEFORE_FILAMENT_CHANGE)
-       //Don't allow filament change without homing first
-      if (axis_unhomed_error())
-    #endif
-    if(!filament_runout){
-      home_all_axes();
-    }
-
+  home_all_axes();
 
     // Initial retract before move to filament change position
-    const float retract = parser.seen('E') ? parser.value_axis_units(E_AXIS) : 0
+  const float retract = parser.seen('E') ? parser.value_axis_units(E_AXIS) : 0
       #ifdef PAUSE_PARK_RETRACT_LENGTH
-        - (PAUSE_PARK_RETRACT_LENGTH)
+  - (PAUSE_PARK_RETRACT_LENGTH)
       #endif
-    ;
+  ;
 
     // Unload filament
-    const float unload_length = parser.seen('U') ? parser.value_axis_units(E_AXIS) : 0
+  const float unload_length = parser.seen('U') ? parser.value_axis_units(E_AXIS) : 0
       #if defined(FILAMENT_CHANGE_UNLOAD_LENGTH) && FILAMENT_CHANGE_UNLOAD_LENGTH > 0
-        - (FILAMENT_CHANGE_UNLOAD_LENGTH)
+  - (FILAMENT_CHANGE_UNLOAD_LENGTH)
       #endif
-    ;
+  ;
 
 
     // Lift Z axis
-    const float z_lift = parser.linearval('Z', 0
+  const float z_lift = parser.linearval('Z', 0
       #ifdef PAUSE_PARK_Z_ADD
-        + PAUSE_PARK_Z_ADD
+    + PAUSE_PARK_Z_ADD
       #endif
     );
 
     // Move XY axes to filament exchange position
-    const float x_pos = 0;
-    const float y_pos = 0;
+  const float x_pos = 0;
+  const float y_pos = 0;
 
-    thermalManager.setTargetHotend(220, active_extruder);
-    ensure_safe_temperature(); // wait for extruder to heat up before unloading
+  thermalManager.setTargetHotend(220, 0);
+  ensure_safe_temperature(); // wait for extruder to heat up before unloading
 
     if (unload_length != 0) {
       if (show_lcd) {
@@ -10568,99 +10537,23 @@ inline void gcode_M711(bool filament_runout = false) {
         #endif
       }
 
-    const float small_extrude = 40;
-    current_position[E_AXIS] += small_extrude;
-    set_destination_from_current();
-    RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
-    stepper.synchronize();
+      const float small_extrude = 40;
+      current_position[E_AXIS] += small_extrude;
+      set_destination_from_current();
+      RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+      stepper.synchronize();
 
-    current_position[E_AXIS] += unload_length;
-    set_destination_from_current();
-    RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
-    stepper.synchronize();
+      current_position[E_AXIS] += unload_length;
+      set_destination_from_current();
+      RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+      stepper.synchronize();
+      thermalManager.setTargetHotend(0, 0);
 
-    thermalManager.setTargetHotend(0, active_extruder);
-
-
-    #if ENABLED(ULTIPANEL)
-      // Show status screen
-      lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
-    #endif
-
+      
     }
-  }
-
-/////////
-  //////
-////////
-
-////////////
-  //////////        M712 - FILAMENT RUNOUT SCRIPT
-  //////////        BLOCKS MADE
-////////////
-  inline void gcode_M712() {
-
-    point_t park_point = NOZZLE_PARK_POINT;
-    // Lift Z axis
-    if (parser.seenval('Z'))
-      park_point.z = parser.linearval('Z');
-
-    // Move XY axes to filament change position or given position
-    if (parser.seenval('X'))
-      park_point.x = parser.linearval('X');
-
-    if (parser.seenval('Y'))
-      park_point.y = parser.linearval('Y');
-
-    #if HOTENDS > 1 && DISABLED(DUAL_X_CARRIAGE)
-      park_point.x += (active_extruder ? hotend_offset[X_AXIS][active_extruder] : 0);
-      park_point.y += (active_extruder ? hotend_offset[Y_AXIS][active_extruder] : 0);
-    #endif
-
-    #if ENABLED(SDSUPPORT)
-      if (card.sdprinting) {
-        card.pauseSDPrint();
-        sd_print_paused = true;
-        SERIAL_ECHO("ENTROU");
-      }
-    #endif
-    print_job_timer.pause();
-
-    stepper.synchronize();
-    COPY(resume_position, current_position);
-
-    const float small_lift = 20;
-    const float medium_retract = 20;
-    current_position[E_AXIS] -= medium_retract;
-    current_position[Z_AXIS] += small_lift;
-    set_destination_from_current();
-    RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
-    stepper.synchronize();
-
-    //enqueue_and_echo_commands_P(PSTR("G28 X Y"));
-
-    Nozzle::park(2, park_point);
-
-    gcode_M711(true);
-
-    defer_return_to_status = true;
-    lcd_advanced_pause_show_message(ADVANCED_LOAD_MESSAGE_OPTION);
-
-    do {
-      KEEPALIVE_STATE(PAUSED_FOR_USER);
-      wait_for_user = false;
-      lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_OPTION);
-      while (advanced_pause_menu_response == ADVANCED_PAUSE_RESPONSE_WAIT_FOR) idle(true);
-        KEEPALIVE_STATE(IN_HANDLER);
-    } while (advanced_pause_menu_response == ADVANCED_PAUSE_RESPONSE_EXTRUDE_MORE);
-
-
-    destination[X_AXIS] = current_position[X_AXIS] = -10;
-    destination[Y_AXIS] = current_position[Y_AXIS] = 0;
-    set_destination_from_current();
-    RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
-    stepper.synchronize();
-    SERIAL_ECHO("SAIU");
+    thermalManager.setTargetHotend(0, 0);
+    enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+    lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
 }
 
 /////////
@@ -12921,10 +12814,6 @@ void process_parsed_command() {
         case 711: // M711: UNLOAD
           gcode_M711();
           break;
-
-        case 712: // M712: FILAMENT RUNOUT SCRIPT
-          gcode_M712();
-          break;
       #endif // ADVANCED_PAUSE_FEATURE
 ///////
 //////////
@@ -14393,11 +14282,11 @@ void prepare_move_to_destination() {
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
 
   void handle_filament_runout() {
-    if (!filament_ran_out) {
-      filament_ran_out = true;
+   
+      
       enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
       stepper.synchronize();
-    }
+    
   }
 
 #endif // FILAMENT_RUNOUT_SENSOR

@@ -4108,7 +4108,7 @@ void kill_screen(const char* lcd_msg) {
       ++_thisItemNr; \
     }while(0)
 
-    void lcd_advanced_pause_toocold_menu() {
+void lcd_advanced_pause_toocold_menu() {
       START_MENU();
       STATIC_ITEM(MSG_HEATING_FAILED_LCD, true, true);
       STATIC_ITEM(MSG_FILAMENT_CHANGE_MINTEMP STRINGIFY(EXTRUDE_MINTEMP) ".", false, false);
@@ -4295,7 +4295,7 @@ void kill_screen(const char* lcd_msg) {
         #define _FC_LINES_G __FC_LINES_G
       #endif
       #if LCD_HEIGHT > _FC_LINES_G + 1
-        STATIC_ITEM(" ");
+        STATIC_ITEM("and press the button");
       #endif
       HOTEND_STATUS_ITEM();
       END_SCREEN();
@@ -5437,13 +5437,15 @@ static void heating_nozzle_load_screen() {
   STATIC_ITEM("Please wait...");   
   HOTEND_STATUS_ITEM();
   END_MENU();
-  if(thermalManager.degHotend(0) > 215) {
-      enqueue_and_echo_commands_P(PSTR("M710"));        
+  if(thermalManager.degHotend(0) > 215 && filament_control_lu != 1) {
+      filament_control_lu = 1;
+      enqueue_and_echo_commands_P(PSTR("M710"));
   }
+  //defer_return_to_status = false;
 }
 
 static void heating_nozzle_unload_screen() {  
-  defer_return_to_status = true;  
+  defer_return_to_status = true;
   thermalManager.setTargetHotend(220,0);
   START_MENU();
   MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed_nozzle);  
@@ -5452,9 +5454,11 @@ static void heating_nozzle_unload_screen() {
   STATIC_ITEM("Please wait..."); 
   HOTEND_STATUS_ITEM();
   END_MENU();
-  if(thermalManager.degHotend(0) > 215) {
-      enqueue_and_echo_commands_P(PSTR("M711"));        
+  if(thermalManager.degHotend(0) > 215 && filament_control_lu != 2) {
+      filament_control_lu = 2;
+      enqueue_and_echo_commands_P(PSTR("M711"));
   }
+ 
 }
 
 static void heating_bed_screen() {  
@@ -5476,7 +5480,12 @@ static void lcd_filament_menu()
 {
     START_MENU();
     MENU_ITEM(back, MSG_BACK, lcd_main_menu);
-    MENU_ITEM(submenu, MSG_LOAD, heating_nozzle_load_screen);
+    if (filament_control_lu == 1) {
+      MENU_ITEM(submenu, MSG_LOADED, heating_nozzle_load_screen);
+    }
+    else {
+      MENU_ITEM(submenu, MSG_LOAD, heating_nozzle_load_screen);
+    }
     MENU_ITEM(submenu, MSG_UNLOAD, heating_nozzle_unload_screen);
     END_MENU();
 }

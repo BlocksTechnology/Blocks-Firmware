@@ -278,6 +278,7 @@
 #define MSG_LP_6                             " Plate leveled!"
 #define MSG_LP_INTRO                         "  Leveling plate...    Press to start   "
 #define MSG_LOAD                             "Load"
+#define MSG_LOADED                           "Load (Loaded!)"
 #define MSG_UNLOAD                           "Unload"
 #define MSG_ABORT                            "Abort"
 #define MSG_PRE_EXTRUD                       "Insert & Press"
