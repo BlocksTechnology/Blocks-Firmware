@@ -6781,8 +6781,7 @@ inline void gcode_M17() {
       do_pause_e_move(unload_length, FILAMENT_CHANGE_UNLOAD_FEEDRATE);
     }
 
-    do {
-
+    do {      
       KEEPALIVE_STATE(PAUSED_FOR_USER);
       wait_for_user = false;
       lcd_advanced_pause_show_message(ADVANCED_PAUSE_RESUME_STOP_OPTION);
@@ -10442,8 +10441,9 @@ inline void gcode_M710() {
 
   const float &unload_length = 0;
   const bool show_lcd = true;
+ 
   home_all_axes();
-
+  
   // Initial retract before move to filament change position
   const float retract = parser.seen('E') ? parser.value_axis_units(E_AXIS) : 0
     #ifdef PAUSE_PARK_RETRACT_LENGTH
@@ -10494,6 +10494,7 @@ inline void gcode_M710() {
   //////////        BLOCKS MADE
 ////////////
 inline void gcode_M711() {
+
   const bool show_lcd = true;
 
   home_all_axes();
@@ -10546,8 +10547,6 @@ inline void gcode_M711() {
       RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
       stepper.synchronize();
       thermalManager.setTargetHotend(0, 0);
-
-
     }
     thermalManager.setTargetHotend(0, 0);
     enqueue_and_echo_commands_P(PSTR("G28 X Y"));
@@ -14280,11 +14279,8 @@ void prepare_move_to_destination() {
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
 
   void handle_filament_runout() {
-
-
       enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
       stepper.synchronize();
-
   }
 
 #endif // FILAMENT_RUNOUT_SENSOR
