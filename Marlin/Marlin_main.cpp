@@ -4582,7 +4582,7 @@ void home_all_axes() { gcode_G28(true); }
 
         ABL_VAR float zoffset;
 
-      #elif ENABLED(AUTO_BED_LEVELING_LINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
+      #elif ENABLED(AUTO_BED_LEVELING_LINEAR)
 
         ABL_VAR int indexIntoAB[GRID_MAX_POINTS_X][GRID_MAX_POINTS_Y];
 
@@ -6203,8 +6203,8 @@ inline void gcode_G34() {
   float diff_between_point = 0;
 
   // Reference point
-  float xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER);
-  float ypos = parser.linearval('Y', current_position[Y_AXIS] + (Y_BED_SIZE) - 30);
+  float xpos = parser.linearval('X', LEFT_PROBE_BED_POSITION);
+  float ypos = parser.linearval('Y', BACK_PROBE_BED_POSITION);
 
   lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
   lcd_assisted_bed_leveling(PROBING);
@@ -6214,8 +6214,8 @@ inline void gcode_G34() {
   base_point = measured_z;
 
   // 1st PROBE
-  xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER);
-  ypos = parser.linearval('Y', current_position[Y_AXIS] - (Y_BED_SIZE) + Y_PROBE_OFFSET_FROM_EXTRUDER + 60);
+  xpos = parser.linearval('X', LEFT_PROBE_BED_POSITION);
+  ypos = parser.linearval('Y', FRONT_PROBE_BED_POSITION);
 
   lcd_assisted_bed_leveling(PROBING);
   lcd_update();
@@ -6227,8 +6227,8 @@ inline void gcode_G34() {
   lcd_assisted_bed(diff_between_point, base_point);
 
   /// 2º PROBE
-  xpos = parser.linearval('X', current_position[X_AXIS] + X_BED_SIZE + X_PROBE_LEFT_OFFSET + 28);
-  ypos = parser.linearval('Y', current_position[Y_AXIS] + Y_PROBE_OFFSET_FROM_EXTRUDER);
+  xpos = parser.linearval('X', RIGHT_PROBE_BED_POSITION);
+  ypos = parser.linearval('Y', FRONT_PROBE_BED_POSITION);
 
   lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
   lcd_assisted_bed_leveling(PROBING);
@@ -6242,8 +6242,8 @@ inline void gcode_G34() {
   lcd_assisted_bed(diff_between_point, base_point);
 
   ////3º PROBE
-  xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_LEFT_OFFSET);
-  ypos = parser.linearval('Y', current_position[Y_AXIS] + (Y_BED_SIZE) + Y_PROBE_OFFSET_FROM_EXTRUDER - 60);
+  xpos = parser.linearval('X', RIGHT_PROBE_BED_POSITION);
+  ypos = parser.linearval('Y', BACK_PROBE_BED_POSITION);
 
   lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
   lcd_assisted_bed_leveling(PROBING);
@@ -10598,13 +10598,15 @@ inline void gcode_M711() {
 
   inline void gcode_M703() {
     SERIAL_ECHO("PRINTING WIFI TRUE");
+    SERIAL_ECHO("ok");
     printing_from_wifi =  true;
     lcd_return_to_status();
+
   }
 
   inline void gcode_M704() {
-
     SERIAL_ECHO("PRINTING WIFI FALSE");
+    SERIAL_ECHO("ok");
     printing_from_wifi =  false;
     lcd_return_to_status();
   }
