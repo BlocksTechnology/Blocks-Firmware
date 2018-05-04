@@ -4424,7 +4424,7 @@ void lcd_advanced_pause_toocold_menu() {
       STATIC_ITEM(" CAREFUL HOT! ");
       STATIC_ITEM("  ");
       STATIC_ITEM("Clean the Nozzle with");
-      STATIC_ITEM("tweezers and press the");
+      STATIC_ITEM("tweezers & press the");
       STATIC_ITEM("button to continue");
       END_SCREEN();
     }
