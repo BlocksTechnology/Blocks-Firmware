@@ -6782,7 +6782,12 @@ inline void gcode_M17() {
       // Unload filament
       do_pause_e_move(unload_length, FILAMENT_CHANGE_UNLOAD_FEEDRATE);
     }
+    // Start the heater idle timers
+    const millis_t nozzle_timeout = (millis_t)(PAUSE_PARK_NOZZLE_TIMEOUT) * 1000UL;
 
+    HOTEND_LOOP()
+      thermalManager.start_heater_idle_timer(e, nozzle_timeout);
+      
     do {      
       KEEPALIVE_STATE(PAUSED_FOR_USER);
       wait_for_user = false;
@@ -6813,13 +6818,6 @@ inline void gcode_M17() {
       disable_e_steppers();
       safe_delay(100);
     #endif
-
-    // Start the heater idle timers
-    const millis_t nozzle_timeout = (millis_t)(PAUSE_PARK_NOZZLE_TIMEOUT) * 1000UL;
-
-    HOTEND_LOOP()
-      thermalManager.start_heater_idle_timer(e, nozzle_timeout);
-
     return true;
   }
 
