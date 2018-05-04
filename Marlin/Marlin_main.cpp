@@ -6225,7 +6225,7 @@ inline void gcode_G34() {
   lcd_assisted_bed(diff_between_point, base_point);
 
   /// 2º PROBE
-  xpos = parser.linearval('X', current_position[X_AXIS] + X_BED_SIZE + X_PROBE_LEFT_OFFSET + 8);
+  xpos = parser.linearval('X', current_position[X_AXIS] + X_BED_SIZE + X_PROBE_LEFT_OFFSET + 28);
   ypos = parser.linearval('Y', current_position[Y_AXIS] + Y_PROBE_OFFSET_FROM_EXTRUDER);
 
   lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;

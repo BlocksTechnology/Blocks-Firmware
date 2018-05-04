@@ -785,15 +785,15 @@
 // @section machine
 
 // The size of the print bed
-#define X_BED_SIZE 220
-#define Y_BED_SIZE 220
+#define X_BED_SIZE 200
+#define Y_BED_SIZE 210
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
-#define X_MIN_POS -10
-#define Y_MIN_POS -8
+#define X_MIN_POS -14
+#define Y_MIN_POS 0
 #define Z_MIN_POS 0
-#define X_MAX_POS 218
-#define Y_MAX_POS 212
+#define X_MAX_POS 214
+#define Y_MAX_POS 210
 #define Z_MAX_POS 215
 
 /**
@@ -912,8 +912,8 @@
 
 #endif
 
-#if ENABLED(AUTO_BED_LEVELING_LINEAR) || ENABLED(AUTO_BED_LEVELING_BILINEAR)
-  
+#if ENABLED(AUTO_BED_LEVELING_LINEAR) || ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
+
   #define X_PROBE_LEFT_OFFSET -25
   #define X_PROBE_RIGHT_OFFSET 25
 
@@ -924,8 +924,8 @@
   // Set the boundaries for probing (where the probe can reach).
   #define LEFT_PROBE_BED_POSITION  X_MIN_POS + X_PROBE_RIGHT_OFFSET
   #define RIGHT_PROBE_BED_POSITION X_MAX_POS + X_PROBE_LEFT_OFFSET
-  #define FRONT_PROBE_BED_POSITION 15
-  #define BACK_PROBE_BED_POSITION 180
+  #define FRONT_PROBE_BED_POSITION Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER
+  #define BACK_PROBE_BED_POSITION  Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER - 30
 
   // The Z probe minimum outer margin (to validate G29 parameters).
   #define MIN_PROBE_EDGE 10
@@ -1007,8 +1007,8 @@
   // Set the boundaries for probing (where the probe can reach).
   #define LEFT_PROBE_BED_POSITION  X_MIN_POS + X_PROBE_RIGHT_OFFSET
   #define RIGHT_PROBE_BED_POSITION X_MAX_POS + X_PROBE_LEFT_OFFSET
-  #define FRONT_PROBE_BED_POSITION 15
-  #define BACK_PROBE_BED_POSITION 180
+  #define FRONT_PROBE_BED_POSITION Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER
+  #define BACK_PROBE_BED_POSITION  Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER - 30
 
   // The Z probe minimum outer margin (to validate G29 parameters).
   #define MIN_PROBE_EDGE 10
