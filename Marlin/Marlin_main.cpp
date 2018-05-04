@@ -645,7 +645,9 @@ float cartes[XYZ] = { 0 };
          filwidth_delay_index[2] = { 0, -1 };                   // Indexes into ring buffer
 #endif
 
-
+#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  static bool filament_ran_out = false;
+#endif
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   AdvancedPauseMenuResponse advanced_pause_menu_response;
@@ -6961,6 +6963,10 @@ inline void gcode_M17() {
     // Move XY to starting position, then Z
     do_blocking_move_to_xy(resume_position[X_AXIS], resume_position[Y_AXIS], NOZZLE_PARK_XY_FEEDRATE);
     do_blocking_move_to_z(resume_position[Z_AXIS], NOZZLE_PARK_Z_FEEDRATE);
+
+    #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+      filament_ran_out = false;
+    #endif
 
     #if ENABLED(ULTIPANEL)
       // Show status screen
@@ -14279,8 +14285,11 @@ void prepare_move_to_destination() {
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
 
   void handle_filament_runout() {
+    if (!filament_ran_out) {
+      filament_ran_out = true;
       enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
       stepper.synchronize();
+    }
   }
 
 #endif // FILAMENT_RUNOUT_SENSOR
