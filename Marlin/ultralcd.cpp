@@ -850,7 +850,7 @@ void kill_screen(const char* lcd_msg) {
 
       set_current_from_destination();
       current_position[Z_AXIS]=current_position[Z_AXIS]+20;
-      current_position[E_AXIS]-=30;
+      current_position[E_AXIS]-=10;
       planner.buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], planner.max_feedrate_mm_s[X_AXIS]/60, active_extruder);
 
       enqueue_and_echo_commands_P(PSTR("G28 X Y"));

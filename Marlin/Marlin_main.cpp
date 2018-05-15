@@ -10544,7 +10544,7 @@ inline void gcode_M711() {
       const float small_extrude = 40;
       current_position[E_AXIS] += small_extrude;
       set_destination_from_current();
-      RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+      RUNPLAN(ADVANCED_PAUSE_EXTRUDE_FEEDRATE);
       stepper.synchronize();
 
       current_position[E_AXIS] += unload_length;
