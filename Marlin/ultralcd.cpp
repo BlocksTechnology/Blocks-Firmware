@@ -5382,7 +5382,7 @@ static void lcd_set_offset_screen() {
 
   if (encoderPosition != 0) {
     refresh_cmd_timeout();
-    current_position[Z_AXIS] += float((int)encoderPosition) * 0.1;
+    current_position[Z_AXIS] += float((int)encoderPosition) * 0.02;
     if (ENABLED(MIN_SOFTWARE_ENDSTOP_Z) && current_position[Z_AXIS] < min) current_position[Z_AXIS] = min;
     if (ENABLED(MAX_SOFTWARE_ENDSTOP_Z) && current_position[Z_AXIS] > max) current_position[Z_AXIS] = max;
     encoderPosition = 0;
@@ -5391,7 +5391,7 @@ static void lcd_set_offset_screen() {
 
     lcdDrawUpdate = 1;
   }
-  if (lcdDrawUpdate) lcd_implementation_drawedit(PSTR("Z"), ftostr31(current_position[Z_AXIS]));
+  if (lcdDrawUpdate) lcd_implementation_drawedit(PSTR("Z"), ftostr32(current_position[Z_AXIS]));
   if (lcd_clicked) {
     SERIAL_ECHO(zprobe_zoffset);
     zprobe_zoffset=zprobe_zoffset+current_position[Z_AXIS];
