@@ -6722,6 +6722,7 @@ inline void gcode_M17() {
   static bool pause_print(const float &retract, const point_t &park_point, const float &unload_length = 0,
                           const int8_t max_beep_count = 0, const bool show_lcd = false
   ) {
+
     if (move_away_flag) return false; // already paused
     int resposta = 0;
     #ifdef ACTION_ON_PAUSE
@@ -6787,7 +6788,7 @@ inline void gcode_M17() {
 
     HOTEND_LOOP()
       thermalManager.start_heater_idle_timer(e, nozzle_timeout);
-      
+
     do {      
       KEEPALIVE_STATE(PAUSED_FOR_USER);
       wait_for_user = false;
@@ -10543,7 +10544,7 @@ inline void gcode_M711() {
       const float small_extrude = 40;
       current_position[E_AXIS] += small_extrude;
       set_destination_from_current();
-      RUNPLAN(FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+      RUNPLAN(ADVANCED_PAUSE_EXTRUDE_FEEDRATE);
       stepper.synchronize();
 
       current_position[E_AXIS] += unload_length;

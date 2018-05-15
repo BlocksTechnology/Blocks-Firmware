@@ -850,8 +850,9 @@ void kill_screen(const char* lcd_msg) {
 
       set_current_from_destination();
       current_position[Z_AXIS]=current_position[Z_AXIS]+20;
-      current_position[E_AXIS]-=30;
+      current_position[E_AXIS]-=10;
       planner.buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], planner.max_feedrate_mm_s[X_AXIS]/60, active_extruder);
+      stepper.synchronize();
 
       enqueue_and_echo_commands_P(PSTR("G28 X Y"));
 
@@ -5381,7 +5382,7 @@ static void lcd_set_offset_screen() {
 
   if (encoderPosition != 0) {
     refresh_cmd_timeout();
-    current_position[Z_AXIS] += float((int)encoderPosition) * 0.1;
+    current_position[Z_AXIS] += float((int)encoderPosition) * 0.02;
     if (ENABLED(MIN_SOFTWARE_ENDSTOP_Z) && current_position[Z_AXIS] < min) current_position[Z_AXIS] = min;
     if (ENABLED(MAX_SOFTWARE_ENDSTOP_Z) && current_position[Z_AXIS] > max) current_position[Z_AXIS] = max;
     encoderPosition = 0;
@@ -5390,7 +5391,7 @@ static void lcd_set_offset_screen() {
 
     lcdDrawUpdate = 1;
   }
-  if (lcdDrawUpdate) lcd_implementation_drawedit(PSTR("Z"), ftostr31(current_position[Z_AXIS]));
+  if (lcdDrawUpdate) lcd_implementation_drawedit(PSTR("Z"), ftostr32(current_position[Z_AXIS]));
   if (lcd_clicked) {
     SERIAL_ECHO(zprobe_zoffset);
     zprobe_zoffset=zprobe_zoffset+current_position[Z_AXIS];
