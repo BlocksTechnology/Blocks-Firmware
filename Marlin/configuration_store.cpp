@@ -407,6 +407,7 @@ void MarlinSettings::postprocess() {
       const float zprobe_zoffset = 0;
     #endif
     EEPROM_WRITE(zprobe_zoffset);
+    EEPROM_WRITE(zprobe_zprobe_zoffset);
 
     //
     // Planar Bed Leveling matrix
@@ -881,6 +882,7 @@ void MarlinSettings::postprocess() {
         float zprobe_zoffset;
       #endif
       EEPROM_READ(zprobe_zoffset);
+      EEPROM_READ(zprobe_zprobe_zoffset);
 
       //
       // Planar Bed Leveling matrix
@@ -1429,6 +1431,7 @@ void MarlinSettings::reset() {
 
   #if HAS_BED_PROBE
     zprobe_zoffset = Z_PROBE_OFFSET_FROM_EXTRUDER;
+    zprobe_zprobe_zoffset = Z_PROBES_OFFSET;   
   #endif
 
   #if ENABLED(DELTA)
