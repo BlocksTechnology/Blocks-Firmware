@@ -724,6 +724,10 @@ extern boolean defer_return_to_status;
 void ensure_safe_temperature();
 bool printing_from_wifi =  false;
 int filament_control_lu = 0;
+bool filament_loaded = false;
+bool filament_load_pla = false;
+bool filament_load_etc = false;
+bool load = false;
 //////
 //////
 /**
@@ -10429,6 +10433,12 @@ static void load_filament(const float &load_length = 0, const float &initial_ext
     set_destination_from_current();
     sync_plan_position_e();
 
+    filament_loaded = true;
+    filament_control_lu = 0;
+    filament_load_pla = false;
+    filament_load_etc = false;
+    load = false;
+
     enqueue_and_echo_commands_P(PSTR("G28 X Y"));
     lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
 
@@ -10480,8 +10490,12 @@ inline void gcode_M710() {
 
   // Initial retract before move to filament change position
   set_destination_from_current();
-
-  thermalManager.setTargetHotend(220, active_extruder);
+  if (filament_load_pla) {
+    thermalManager.setTargetHotend(220, active_extruder);
+  }
+  else if (filament_load_etc) {
+    thermalManager.setTargetHotend(250, active_extruder);
+  }
   ensure_safe_temperature(); // wait for extruder to heat up before unloading
 
   #if ENABLED(ULTIPANEL)
@@ -10530,7 +10544,12 @@ inline void gcode_M711() {
   const float x_pos = 0;
   const float y_pos = 0;
 
-  thermalManager.setTargetHotend(220, 0);
+   if (filament_load_pla) {
+    thermalManager.setTargetHotend(220, active_extruder);
+  }
+  else if (filament_load_etc) {
+    thermalManager.setTargetHotend(250, active_extruder);
+  }
   ensure_safe_temperature(); // wait for extruder to heat up before unloading
 
     if (unload_length != 0) {
@@ -10554,6 +10573,12 @@ inline void gcode_M711() {
       thermalManager.setTargetHotend(0, 0);
     }
     thermalManager.setTargetHotend(0, 0);
+
+    filament_loaded = false;
+    filament_control_lu = 0;
+    filament_load_pla = false;
+    filament_load_etc = false;
+
     enqueue_and_echo_commands_P(PSTR("G28 X Y"));
     lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
 }

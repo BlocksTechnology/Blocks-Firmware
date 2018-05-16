@@ -186,6 +186,10 @@ void kill(const char*);
 void quickstop_stepper();
 extern bool printing_from_wifi;
 extern int filament_control_lu;
+extern bool filament_loaded;
+extern bool filament_load_pla;
+extern bool filament_load_etc;
+extern bool load;
 extern float zprobe_zprobe_zoffset;
 
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)

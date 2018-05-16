@@ -185,6 +185,7 @@ uint16_t max_display_update_time = 0;
   static void lcd_set_offset();
   static void lcd_set_offset_screen();
   void lcd_exit_heating_bed_nozzle();
+  void heating_nozzle_load_screen();
 
 void _EEPROM_writeDatas(int &pos, uint8_t* value, uint8_t size)
 {
@@ -5425,12 +5426,21 @@ static void lcd_exit_heating_bed_nozzle() {
   thermalManager.setTargetBed(0);
   thermalManager.setTargetHotend(0,0);
   thermalManager.disable_all_heaters();
-  lcd_goto_screen(lcd_status_screen);
+  filament_load_pla = false;
+  filament_load_etc = false;
+  filament_control_lu = 0;
+  load = false;
+  lcd_goto_screen(lcd_filament_menu);
 }
 
 static void heating_nozzle_load_screen() {  
   defer_return_to_status = true;  
-  thermalManager.setTargetHotend(220,0);
+  if (filament_load_pla) {
+    thermalManager.setTargetHotend(220, active_extruder);
+  }
+  else if (filament_load_etc) {
+    thermalManager.setTargetHotend(250, active_extruder);
+  }
   START_MENU();
   MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed_nozzle);  
   STATIC_ITEM(MSG_FILAMENT_LOAD_HEADER);
@@ -5438,16 +5448,20 @@ static void heating_nozzle_load_screen() {
   STATIC_ITEM("Please wait...");   
   HOTEND_STATUS_ITEM();
   END_MENU();
-  if(thermalManager.degHotend(0) > 215 && filament_control_lu != 1) {
+  if((thermalManager.degHotend(0) > (thermalManager.degTargetHotend(0) - 2)) && (filament_control_lu != 1)) {
       filament_control_lu = 1;
       enqueue_and_echo_commands_P(PSTR("M710"));
   }
-  //defer_return_to_status = false;
 }
 
 static void heating_nozzle_unload_screen() {  
   defer_return_to_status = true;
-  thermalManager.setTargetHotend(220,0);
+  if (filament_load_pla) {
+    thermalManager.setTargetHotend(220, active_extruder);
+  }
+  else if (filament_load_etc) {
+    thermalManager.setTargetHotend(250, active_extruder);
+  }
   START_MENU();
   MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed_nozzle);  
   STATIC_ITEM(MSG_FILAMENT_UNLOAD_HEADER);
@@ -5455,11 +5469,10 @@ static void heating_nozzle_unload_screen() {
   STATIC_ITEM("Please wait..."); 
   HOTEND_STATUS_ITEM();
   END_MENU();
-  if(thermalManager.degHotend(0) > 215 && filament_control_lu != 2) {
+  if((thermalManager.degHotend(0) > (thermalManager.degTargetHotend(0) - 2)) && (filament_control_lu != 2)) {
       filament_control_lu = 2;
       enqueue_and_echo_commands_P(PSTR("M711"));
-  }
- 
+  } 
 }
 
 static void heating_bed_screen() {  
@@ -5477,17 +5490,62 @@ static void heating_bed_screen() {
   }
 }
 
+static void filament_choosed_pla() {
+  filament_load_pla = true;
+  SERIAL_ECHO(load);
+  if (load) {
+    heating_nozzle_load_screen();
+  }
+  else {
+    heating_nozzle_unload_screen();
+  }  
+}
+
+static void filament_choosed_etc() {
+  filament_load_etc = true;
+  SERIAL_ECHO(load);
+  if (load) {
+    heating_nozzle_load_screen();
+  }
+  else {
+    heating_nozzle_unload_screen();
+  }
+}
+
+static void filament_choice_load() {
+  load = true;
+  SERIAL_ECHO(load);
+  START_MENU();
+  STATIC_ITEM("Select material:");
+  MENU_ITEM(submenu, "PLA", filament_choosed_pla);
+  MENU_ITEM(submenu, "ABS/PETG/NYLON/OTHER", filament_choosed_etc);
+  MENU_ITEM(back, MSG_BACK, lcd_main_menu);
+  END_MENU();
+}
+
+static void filament_choice_unload() {
+  load = false;
+  SERIAL_ECHO(load);
+  START_MENU();
+  STATIC_ITEM("Select material:");
+  MENU_ITEM(submenu, "PLA", filament_choosed_pla);
+  MENU_ITEM(submenu, "ABS/PETG/NYLON/OTHER", filament_choosed_etc);
+  MENU_ITEM(back, MSG_BACK, lcd_main_menu);
+  END_MENU();
+}
+
+
 static void lcd_filament_menu()
 {
     START_MENU();
     MENU_ITEM(back, MSG_BACK, lcd_main_menu);
-    if (filament_control_lu == 1) {
-      MENU_ITEM(submenu, MSG_LOADED, heating_nozzle_load_screen);
+    if (filament_loaded) {
+      MENU_ITEM(submenu, MSG_LOADED, filament_choice_load);
     }
     else {
-      MENU_ITEM(submenu, MSG_LOAD, heating_nozzle_load_screen);
+      MENU_ITEM(submenu, MSG_LOAD, filament_choice_load);
     }
-    MENU_ITEM(submenu, MSG_UNLOAD, heating_nozzle_unload_screen);
+    MENU_ITEM(submenu, MSG_UNLOAD, filament_choice_unload);
     END_MENU();
 }
 
