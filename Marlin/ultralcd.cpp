@@ -4390,10 +4390,10 @@ void lcd_advanced_pause_toocold_menu() {
 
     void piece_center() {
       START_SCREEN();
-      STATIC_ITEM(" Place Calibration ");
-      STATIC_ITEM("Piece in the middle");
-      STATIC_ITEM(" of the plate and  ");
-      STATIC_ITEM(" press the button  ");
+      STATIC_ITEM("Put Calibration Piece");
+      STATIC_ITEM("on the proper place");
+      STATIC_ITEM("of the plate and");
+      STATIC_ITEM("press the button");
       STATIC_ITEM("  to continue  ");
       END_SCREEN();
     }
@@ -5367,8 +5367,8 @@ void lcd_reset_alert_level() { lcd_status_message_level = 0; }
 void lcd_set_offset()
 {  
   enqueue_and_echo_commands_P(PSTR("G36"));
-  enqueue_and_echo_commands_P(PSTR("G0 X15 F2000")); 
-  enqueue_and_echo_commands_P(PSTR("G0 Z8")); 
+  enqueue_and_echo_commands_P(PSTR("G1 Z8 F400"));
+  enqueue_and_echo_commands_P(PSTR("G1 X15 F2000")); 
   zprobe_zoffset = 0;
   settings.save();
   lcd_goto_screen(lcd_set_offset_screen);
@@ -5392,10 +5392,10 @@ static void lcd_set_offset_screen() {
 
     lcdDrawUpdate = 1;
   }
-  if (lcdDrawUpdate) lcd_implementation_drawedit(PSTR("Z"), ftostr32(current_position[Z_AXIS]));
+  if (lcdDrawUpdate) lcd_implementation_drawedit(PSTR("Z"), ftostr32((-zprobe_zoffset)+current_position[Z_AXIS]));
   if (lcd_clicked) {
     SERIAL_ECHO(zprobe_zoffset);
-    zprobe_zoffset=zprobe_zoffset+current_position[Z_AXIS];
+    zprobe_zoffset=(-zprobe_zoffset)+current_position[Z_AXIS];
     SERIAL_ECHO(zprobe_zoffset);
     lcd_completion_feedback(settings.save());
 

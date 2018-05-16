@@ -6343,11 +6343,14 @@ inline void gcode_G39() {
   wait_for_user = true;
   while (wait_for_user) idle(true);
 
+  wait_for_user = false;
+  KEEPALIVE_STATE(IN_HANDLER);
+
   lcd_assisted_bed_leveling(PROBING);
 
-  measured_z_left=probe_pt((X_BED_SIZE/2)-1, 100, parser.boolval('E'), 1);
+  measured_z_left=probe_pt((X_BED_SIZE/2)-1, 195, parser.boolval('E'), 1);
 
-  measured_z_right=probe_pt((X_BED_SIZE/2)+1, 100, parser.boolval('E'), 1);
+  measured_z_right=probe_pt((X_BED_SIZE/2)+1, 195, parser.boolval('E'), 1);
 
   tone(BEEPER_PIN, 6000);
   delay(50);
