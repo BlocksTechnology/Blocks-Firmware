@@ -1009,7 +1009,7 @@ void kill_screen(const char* lcd_msg) {
 
   void lcd_main_menu() {
     START_MENU();
-    MENU_BACK(MSG_BACK);
+    MENU_ITEM(submenu, MSG_BACK, lcd_return_to_status);
 
     #if ENABLED(SDSUPPORT)
       if (card.cardOK) {
@@ -5418,10 +5418,11 @@ static void nozzle_adjustment_clean_nozzle()
     STATIC_ITEM("Clean Nozzle?");
     MENU_ITEM(function, "Yes", continue_nozzle_adjustment_clean_nozzle);
     MENU_ITEM(function, "No", lcd_set_offset);
-    MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
+    MENU_ITEM(submenu, MSG_BACK, lcd_level_plate);
     END_MENU();
 }
-static void lcd_exit_heating_bed_nozzle() {
+
+static void lcd_exit_heating_nozzle() {
   defer_return_to_status = false;
   thermalManager.setTargetBed(0);
   thermalManager.setTargetHotend(0,0);
@@ -5433,6 +5434,31 @@ static void lcd_exit_heating_bed_nozzle() {
   lcd_goto_screen(lcd_filament_menu);
 }
 
+static void lcd_exit_heating_bed() {
+  defer_return_to_status = false;
+  thermalManager.setTargetBed(0);
+  thermalManager.setTargetHotend(0,0);
+  thermalManager.disable_all_heaters();
+  filament_load_pla = false;
+  filament_load_etc = false;
+  filament_control_lu = 0;
+  load = false;
+  lcd_goto_screen(lcd_level_plate);
+}
+
+static void lcd_exit_heating_bed_nozzle() {
+  defer_return_to_status = false;
+  thermalManager.setTargetBed(0);
+  thermalManager.setTargetHotend(0,0);
+  thermalManager.disable_all_heaters();
+  filament_load_pla = false;
+  filament_load_etc = false;
+  filament_control_lu = 0;
+  load = false;
+  lcd_return_to_status();
+}
+
+
 static void heating_nozzle_load_screen() {  
   defer_return_to_status = true;  
   if (filament_load_pla) {
@@ -5442,7 +5468,7 @@ static void heating_nozzle_load_screen() {
     thermalManager.setTargetHotend(250, active_extruder);
   }
   START_MENU();
-  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed_nozzle);  
+  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_nozzle);  
   STATIC_ITEM(MSG_FILAMENT_LOAD_HEADER);
   STATIC_ITEM("Heating nozzle");
   STATIC_ITEM("Please wait...");   
@@ -5463,7 +5489,7 @@ static void heating_nozzle_unload_screen() {
     thermalManager.setTargetHotend(250, active_extruder);
   }
   START_MENU();
-  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed_nozzle);  
+  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_nozzle);  
   STATIC_ITEM(MSG_FILAMENT_UNLOAD_HEADER);
   STATIC_ITEM("Heating nozzle");
   STATIC_ITEM("Please wait..."); 
@@ -5479,7 +5505,7 @@ static void heating_bed_screen() {
   defer_return_to_status = true;  
   thermalManager.setTargetBed(50);
   START_MENU();
-  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed_nozzle);  
+  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_bed);  
   STATIC_ITEM("Assisted Bed");
   STATIC_ITEM("Leveling");
   STATIC_ITEM("Heating bed...");
@@ -5519,7 +5545,7 @@ static void filament_choice_load() {
   STATIC_ITEM("Select material:");
   MENU_ITEM(submenu, "PLA", filament_choosed_pla);
   MENU_ITEM(submenu, "ABS/PETG/NYLON/OTHER", filament_choosed_etc);
-  MENU_ITEM(back, MSG_BACK, lcd_main_menu);
+  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_nozzle);
   END_MENU();
 }
 
@@ -5530,7 +5556,7 @@ static void filament_choice_unload() {
   STATIC_ITEM("Select material:");
   MENU_ITEM(submenu, "PLA", filament_choosed_pla);
   MENU_ITEM(submenu, "ABS/PETG/NYLON/OTHER", filament_choosed_etc);
-  MENU_ITEM(back, MSG_BACK, lcd_main_menu);
+  MENU_ITEM(submenu, MSG_BACK, lcd_exit_heating_nozzle);
   END_MENU();
 }
 
@@ -5538,7 +5564,7 @@ static void filament_choice_unload() {
 static void lcd_filament_menu()
 {
     START_MENU();
-    MENU_ITEM(back, MSG_BACK, lcd_main_menu);
+    MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
     if (filament_loaded) {
       MENU_ITEM(submenu, MSG_LOADED, filament_choice_load);
     }
@@ -5553,7 +5579,7 @@ static void lcd_filament_menu()
 static void lcd_level_plate()
 {
   START_MENU();
-  MENU_ITEM(back, MSG_BACK, lcd_main_menu);
+  MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
   MENU_ITEM(submenu, MSG_LEVEL_PLATE, heating_bed_screen);
   MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));
   MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle); 

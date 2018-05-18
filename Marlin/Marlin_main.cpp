@@ -10581,6 +10581,7 @@ inline void gcode_M711() {
     filament_control_lu = 0;
     filament_load_pla = false;
     filament_load_etc = false;
+    load = false;
 
     enqueue_and_echo_commands_P(PSTR("G28 X Y"));
     lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
