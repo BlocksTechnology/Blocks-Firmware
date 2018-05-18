@@ -5581,8 +5581,8 @@ static void lcd_level_plate()
   START_MENU();
   MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
   MENU_ITEM(submenu, MSG_LEVEL_PLATE, heating_bed_screen);
-  MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));
-  MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle); 
+  MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle);
+  MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));  
   END_MENU();    
 }
 
