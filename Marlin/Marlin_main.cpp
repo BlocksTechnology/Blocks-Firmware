@@ -6275,25 +6275,23 @@ inline void gcode_G34() {
     ////////////// STOP FUNCTION - BLOCKS MADE
 //////////////////
 inline void gcode_G35() {
-
-  card.sdprinting = false;
   card.stopSDPrint();
-  card.closefile();
+  clear_command_queue();
+  quickstop_stepper();
+  print_job_timer.stop();
   thermalManager.disable_all_heaters();
+  fanSpeeds[0] = 0;
   #if FAN_COUNT > 0
     for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
   #endif
-  wait_for_heatup = false;
+  wait_for_heatup = false;  
 
-  quickstop_stepper();
-  current_position[Z_AXIS]=current_position[Z_AXIS]+20;
-  current_position[E_AXIS]-=30;
-  planner.buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], planner.max_feedrate_mm_s[X_AXIS]/60, active_extruder);
-
+  enqueue_and_echo_commands_P(PSTR("G91"));
+  enqueue_and_echo_commands_P(PSTR("G1 E-20 F4000"));
   enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+  enqueue_and_echo_commands_P(PSTR("G1 E30 F600"));
 
-  LCD_MESSAGEPGM(WELCOME_MSG);
-  lcd_update();
+  lcd_setstatusPGM(PSTR(MSG_PRINT_ABORTED), -1);
   lcd_return_to_status();
 }
 
