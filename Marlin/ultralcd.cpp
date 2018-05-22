@@ -1015,7 +1015,6 @@ void kill_screen(const char* lcd_msg) {
             MENU_ITEM(function, MSG_PAUSE_PRINT, lcd_sdcard_pause);
           else
             MENU_ITEM(function, MSG_RESUME_PRINT, lcd_sdcard_resume);
-          MENU_ITEM(function, MSG_STOP_PRINT, lcd_sdcard_stop);
         }
         else if (printing_from_wifi != true) {
           MENU_ITEM(submenu, MSG_CARD_MENU, lcd_sdcard_menu);
@@ -1056,6 +1055,7 @@ void kill_screen(const char* lcd_msg) {
 
     if ((planner.movesplanned() || IS_SD_PRINTING) && printing_from_wifi != true) {
       MENU_ITEM(submenu, MSG_TUNE, lcd_tune_menu);
+      MENU_ITEM(function, MSG_STOP_PRINT, lcd_sdcard_stop);
     }
     else if (printing_from_wifi != true) {
       MENU_ITEM(submenu, MSG_FILAMENT, lcd_filament_menu);
@@ -1065,8 +1065,8 @@ void kill_screen(const char* lcd_msg) {
 
     if (printing_from_wifi) {
       MENU_ITEM(function, MSG_PAUSE_PRINT, lcd_sdcard_pause);
-      MENU_ITEM(function, MSG_STOP_PRINT, lcd_sdcard_stop);
       MENU_ITEM(submenu, MSG_TUNE, lcd_tune_menu);
+      MENU_ITEM(function, MSG_STOP_PRINT, lcd_sdcard_stop);
     }
 
     #if ENABLED(LCD_INFO_MENU)
