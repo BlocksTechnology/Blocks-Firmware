@@ -6299,8 +6299,8 @@ inline void gcode_G35() {
 inline void gcode_G36() {
   home_all_axes();
 
-  float xpos = parser.linearval('X', current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER);
-  float ypos = parser.linearval('Y', current_position[Y_AXIS] + (Y_BED_SIZE) - 30);
+  float xpos = parser.linearval('X', LEFT_PROBE_BED_POSITION);
+  float ypos = parser.linearval('Y', BACK_PROBE_BED_POSITION);
 
   zprobe_zoffset = probe_pt(xpos, ypos, parser.boolval('E'), 1);
 }
