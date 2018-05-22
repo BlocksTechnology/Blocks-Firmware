@@ -4415,6 +4415,8 @@ void lcd_advanced_pause_toocold_menu() {
       else {
         lcd_print(" degrees -->");
       }
+      u8g.setPrintPos(8, 46);
+      lcd_print("and press the button");
       END_SCREEN();
     }
 
