@@ -882,7 +882,8 @@
 #define ADVANCED_PAUSE_FEATURE
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   #define PAUSE_PARK_RETRACT_FEEDRATE 15      // Initial retract feedrate in mm/s
-  #define PAUSE_PARK_RETRACT_LENGTH 30         // Initial retract in mm
+  #define PAUSE_PARK_RETRACT_LENGTH 6         // Initial retract in mm
+  #define RESUME_PARK_EXTRUDE_LENGTH 20       // Initial extrude in mm
                                               // It is a short retract used immediately after print interrupt before move to filament exchange position
   #define FILAMENT_CHANGE_UNLOAD_FEEDRATE 50  // Unload filament feedrate in mm/s - filament unloading can be fast
   #define FILAMENT_CHANGE_UNLOAD_LENGTH 700   // Unload filament length from hotend in mm
@@ -902,7 +903,7 @@
   #define FILAMENT_CHANGE_NUMBER_OF_ALERT_BEEPS 30 // Number of alert beeps before printer goes quiet
   #define PAUSE_PARK_NO_STEPPER_TIMEOUT       // Enable to have stepper motors hold position during filament change
                                               // even if it takes longer than DEFAULT_STEPPER_DEACTIVE_TIME.
-  //#define PARK_HEAD_ON_PAUSE                // Go to filament change position on pause, return to print position on resume
+  #define PARK_HEAD_ON_PAUSE                // Go to filament change position on pause, return to print position on resume
   //#define HOME_BEFORE_FILAMENT_CHANGE       // Ensure homing has been completed prior to parking for filament change
 #endif
 

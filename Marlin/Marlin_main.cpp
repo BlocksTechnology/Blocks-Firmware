@@ -6727,6 +6727,97 @@ inline void gcode_M17() {
   static bool pause_print(const float &retract, const point_t &park_point, const float &unload_length = 0,
                           const int8_t max_beep_count = 0, const bool show_lcd = false
   ) {
+    if (move_away_flag) return false; // already paused
+
+    #ifdef ACTION_ON_PAUSE
+      SERIAL_ECHOLNPGM("//action:" ACTION_ON_PAUSE);
+    #endif
+
+    if (!DEBUGGING(DRYRUN) && unload_length != 0) {
+      #if ENABLED(PREVENT_COLD_EXTRUSION)
+        if (!thermalManager.allow_cold_extrude &&
+            thermalManager.degTargetHotend(active_extruder) < thermalManager.extrude_min_temp) {
+          SERIAL_ERROR_START();
+          SERIAL_ERRORLNPGM(MSG_TOO_COLD_FOR_M600);
+          return false;
+        }
+      #endif
+
+      ensure_safe_temperature(); // wait for extruder to heat up before unloading
+    }
+
+    // Indicate that the printer is paused
+    move_away_flag = true;
+
+    // Pause the print job and timer
+    #if ENABLED(SDSUPPORT)
+      if (card.sdprinting) {
+        card.pauseSDPrint();
+        sd_print_paused = true;
+      }
+    #endif
+    print_job_timer.pause();
+
+    // Show initial message and wait for synchronize steppers
+    if (show_lcd) {
+      #if ENABLED(ULTIPANEL)
+        lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_INIT);
+      #endif
+    }
+
+    // Save current position
+    stepper.synchronize();
+    COPY(resume_position, current_position);
+
+    // Initial retract before move to filament change position
+    if (retract && !thermalManager.tooColdToExtrude(active_extruder))
+      do_pause_e_move(retract, PAUSE_PARK_RETRACT_FEEDRATE);
+
+    // Park the nozzle by moving up by z_lift and then moving to (x_pos, y_pos)
+    Nozzle::park(2, park_point);
+
+    if (unload_length != 0) {
+      if (show_lcd) {
+        #if ENABLED(ULTIPANEL)
+          lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_UNLOAD);
+          idle();
+        #endif
+      }
+
+      // Unload filament
+      do_pause_e_move(unload_length, FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+    }
+
+    if (show_lcd) {
+      #if ENABLED(ULTIPANEL)
+        lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_INSERT);
+      #endif
+    }
+
+    #if HAS_BUZZER
+      filament_change_beep(max_beep_count, true);
+    #endif
+
+    idle();
+
+    // Disable extruders steppers for manual filament changing (only on boards that have separate ENABLE_PINS)
+    #if E0_ENABLE_PIN != X_ENABLE_PIN && E1_ENABLE_PIN != Y_ENABLE_PIN
+      disable_e_steppers();
+      safe_delay(100);
+    #endif
+
+    // Start the heater idle timers
+    const millis_t nozzle_timeout = (millis_t)(PAUSE_PARK_NOZZLE_TIMEOUT) * 1000UL;
+
+    HOTEND_LOOP()
+      thermalManager.start_heater_idle_timer(e, nozzle_timeout);
+
+    return true;
+  }
+
+  static bool pause_print_on_filament_change(const float &retract, const point_t &park_point, const float &unload_length = 0,
+                          const int8_t max_beep_count = 0, const bool show_lcd = false
+  ) {
 
     if (move_away_flag) return false; // already paused
     int resposta = 0;
@@ -6931,6 +7022,8 @@ inline void gcode_M17() {
       if (!thermalManager.tooColdToExtrude(active_extruder)) {
         float extrude_length = initial_extrude_length;
 
+        do_pause_e_move(RESUME_PARK_EXTRUDE_LENGTH, ADVANCED_PAUSE_EXTRUDE_FEEDRATE);
+
         do {
           if (extrude_length > 0) {
             // "Wait for filament extrude"
@@ -6990,6 +7083,7 @@ inline void gcode_M17() {
 
     move_away_flag = false;
   }
+
 #endif // ADVANCED_PAUSE_FEATURE
 
 #if ENABLED(SDSUPPORT)
@@ -10325,7 +10419,7 @@ inline void gcode_M502() {
 
     const bool job_running = print_job_timer.isRunning();
 
-    if (pause_print(retract, park_point, unload_length, beep_count, true)) {
+    if (pause_print_on_filament_change(retract, park_point, unload_length, beep_count, true)) {
       wait_for_filament_reload(beep_count);
       resume_print(load_length, ADVANCED_PAUSE_EXTRUDE_LENGTH, beep_count);
     }
