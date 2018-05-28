@@ -6875,7 +6875,8 @@ inline void gcode_M17() {
           idle();
         #endif
       }
-
+      
+      do_pause_e_move(30, ADVANCED_PAUSE_EXTRUDE_FEEDRATE);
       // Unload filament
       do_pause_e_move(unload_length, FILAMENT_CHANGE_UNLOAD_FEEDRATE);
     }
