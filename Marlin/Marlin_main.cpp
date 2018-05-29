@@ -274,6 +274,14 @@
   #include "planner_bezier.h"
 #endif
 
+#if ENABLED(FWRETRACT)
+  #include "fwretract.h"
+#endif
+
+#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  #include "runout.h"
+#endif
+
 #if HAS_BUZZER && DISABLED(LCD_USE_I2C_BUZZER)
   #include "buzzer.h"
 #endif
@@ -645,10 +653,6 @@ float cartes[XYZ] = { 0 };
          filwidth_delay_index[2] = { 0, -1 };                   // Indexes into ring buffer
 #endif
 
-#if ENABLED(FILAMENT_RUNOUT_SENSOR)
-  static bool filament_ran_out = false;
-#endif
-
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   AdvancedPauseMenuResponse advanced_pause_menu_response;
 #endif
@@ -913,18 +917,6 @@ void setup_killpin() {
     SET_INPUT_PULLUP(KILL_PIN);
   #endif
 }
-
-#if ENABLED(FILAMENT_RUNOUT_SENSOR)
-
-  void setup_filrunoutpin() {
-    #if ENABLED(ENDSTOPPULLUP_FIL_RUNOUT)
-      SET_INPUT_PULLUP(FIL_RUNOUT_PIN);
-    #else
-      SET_INPUT(FIL_RUNOUT_PIN);
-    #endif
-  }
-
-#endif
 
 void setup_powerhold() {
   #if HAS_SUICIDE
@@ -6284,7 +6276,7 @@ inline void gcode_G35() {
   #if FAN_COUNT > 0
     for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
   #endif
-  wait_for_heatup = false;  
+  wait_for_heatup = false;
 
   enqueue_and_echo_commands_P(PSTR("G91"));
   enqueue_and_echo_commands_P(PSTR("G1 E-20 F4000"));
@@ -6886,7 +6878,7 @@ inline void gcode_M17() {
     HOTEND_LOOP()
       thermalManager.start_heater_idle_timer(e, nozzle_timeout);
 
-    do {      
+    do {
       KEEPALIVE_STATE(PAUSED_FOR_USER);
       wait_for_user = false;
       lcd_advanced_pause_show_message(ADVANCED_PAUSE_RESUME_STOP_OPTION);
@@ -7063,7 +7055,7 @@ inline void gcode_M17() {
     do_blocking_move_to_z(resume_position[Z_AXIS], NOZZLE_PARK_Z_FEEDRATE);
 
     #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-      filament_ran_out = false;
+      runout.reset();
     #endif
 
     #if ENABLED(ULTIPANEL)
@@ -10552,9 +10544,9 @@ inline void gcode_M710() {
 
   const float &unload_length = 0;
   const bool show_lcd = true;
- 
+
   home_all_axes();
-  
+
   // Initial retract before move to filament change position
   const float retract = parser.seen('E') ? parser.value_axis_units(E_AXIS) : 0
     #ifdef PAUSE_PARK_RETRACT_LENGTH
@@ -14405,18 +14397,6 @@ void prepare_move_to_destination() {
 
 #endif
 
-#if ENABLED(FILAMENT_RUNOUT_SENSOR)
-
-  void handle_filament_runout() {
-    if (!filament_ran_out) {
-      filament_ran_out = true;
-      enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
-      stepper.synchronize();
-    }
-  }
-
-#endif // FILAMENT_RUNOUT_SENSOR
-
 #if ENABLED(FAST_PWM_FAN)
 
   void setPwmFrequency(uint8_t pin, int val) {
@@ -14677,8 +14657,7 @@ void disable_all_steppers() {
 void manage_inactivity(bool ignore_stepper_queue/*=false*/) {
 
   #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-    if ((IS_SD_PRINTING || print_job_timer.isRunning()) && (READ(FIL_RUNOUT_PIN) == FIL_RUNOUT_INVERTING))
-      handle_filament_runout();
+    runout.run();
   #endif
 
   if (commands_in_queue < BUFSIZE) get_available_commands();
@@ -14981,7 +14960,7 @@ void setup() {
   #endif
 
   #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-    setup_filrunoutpin();
+    runout.setup();
   #endif
 
   setup_killpin();

@@ -192,10 +192,6 @@ extern bool filament_load_etc;
 extern bool load;
 extern float zprobe_zprobe_zoffset;
 
-#if ENABLED(FILAMENT_RUNOUT_SENSOR)
-  void handle_filament_runout();
-#endif
-
 extern uint8_t marlin_debug_flags;
 #define DEBUGGING(F) (marlin_debug_flags & (DEBUG_## F))
 
