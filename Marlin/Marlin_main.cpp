@@ -6352,9 +6352,9 @@ inline void gcode_G39() {
 
   lcd_assisted_bed_leveling(PROBING);
 
-  measured_z_left=probe_pt((X_BED_SIZE/2)-1, 195, parser.boolval('E'), 1);
+  measured_z_left=probe_pt((X_BED_SIZE/2)-1, BACK_PROBE_BED_POSITION, parser.boolval('E'), 1);
 
-  measured_z_right=probe_pt((X_BED_SIZE/2)+1, 195, parser.boolval('E'), 1);
+  measured_z_right=probe_pt((X_BED_SIZE/2)+1, BACK_PROBE_BED_POSITION, parser.boolval('E'), 1);
 
   tone(BEEPER_PIN, 6000);
   delay(50);
@@ -10271,6 +10271,19 @@ inline void gcode_M502() {
       zprobe_zoffset = value;
     }
     SERIAL_ECHOLNPAIR(": ", zprobe_zoffset);
+
+    #if ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
+    if(parser.seen('D')) {
+      const float value = parser.value_linear_units();
+      if(!WITHIN(value, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX)) {
+        SERIAL_ERRORLNPGM(" " MSG_Z_MIN " " STRINGIFY(Z_PROBE_OFFSET_MIN) " " MSG_Z_MAX " " STRINGIFY(Z_PROBE_OFFSET_RANGE_MAX));
+        return;
+      }
+      zprobe_zprobe_zoffset = value;
+    }
+    SERIAL_ECHOPGM(MSG_Z_OFFSET_PROBES);
+    SERIAL_ECHOLNPAIR(": ", zprobe_zprobe_zoffset);
+    #endif
   }
 
 #endif // HAS_BED_PROBE

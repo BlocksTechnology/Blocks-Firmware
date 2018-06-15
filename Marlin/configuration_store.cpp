@@ -2043,6 +2043,12 @@ void MarlinSettings::reset() {
       }
       CONFIG_ECHO_START;
       SERIAL_ECHOLNPAIR("  M851 Z", LINEAR_UNIT(zprobe_zoffset));
+      #if ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
+        CONFIG_ECHO_START;
+        SERIAL_ECHOLNPGM("Z-Probe-Probe Offset(mm):");
+        CONFIG_ECHO_START;
+        SERIAL_ECHOLNPAIR("  M851 D", LINEAR_UNIT(zprobe_zprobe_zoffset));
+      #endif
     #endif
 
     /**

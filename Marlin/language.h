@@ -286,6 +286,7 @@
 #define MSG_FILAMENT_CHANGE_HEADER           "FILAMENT CHANGE"
 #define MSG_FILAMENT_LOAD_HEADER             "LOAD FILAMENT"
 #define MSG_FILAMENT_UNLOAD_HEADER           "UNLOAD FILAMENT"
+#define MSG_Z_OFFSET_PROBES                  "Offset between probes"
 
 // LCD Menu Messages
 
