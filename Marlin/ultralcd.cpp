@@ -5414,9 +5414,9 @@ static void continue_nozzle_adjustment_clean_nozzle()
 static void nozzle_adjustment_clean_nozzle()
 {
     START_MENU();
-    STATIC_ITEM("Clean Nozzle?");
-    MENU_ITEM(function, "Yes", continue_nozzle_adjustment_clean_nozzle);
-    MENU_ITEM(function, "No", lcd_set_offset);
+    STATIC_ITEM("Is the nozzle clean?");
+    MENU_ITEM(function, "Yes", lcd_set_offset);
+    MENU_ITEM(function, "No", continue_nozzle_adjustment_clean_nozzle);
     MENU_ITEM(submenu, MSG_BACK, lcd_level_plate);
     END_MENU();
 }
