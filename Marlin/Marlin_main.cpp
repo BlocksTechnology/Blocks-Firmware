@@ -80,6 +80,7 @@
 // G30 - Single Z Probe, probes bed at current XY location.
 // G31 - Dock sled (Z_PROBE_SLED only)
 // G32 - Undock sled (Z_PROBE_SLED only)
+// G35 - CREATED BY BLOCKS - Stop Function
 // G90 - Use Absolute Coordinates
 // G91 - Use Relative Coordinates
 // G92 - Set current position to coordinates given
@@ -172,9 +173,9 @@
 // M665 - set delta configurations
 // M666 - set delta endstop adjustment
 // M605 - Set dual x-carriage movement mode: S<mode> [ X<duplication x-offset> R<duplication temp offset> ]
-// M700 - Level plate script for use with Blocks printer.
-// M701 - Load filament script for use with Blocks printer.
-// M702 - Unload filament script for use with Blocks printer.
+// M700 - CREATED BY BLOCKS - Level plate script for use with Blocks printer.
+// M701 - CREATED BY BLOCKS - Load filament script for use with Blocks printer.
+// M702 - CREATED BY BLOCKS - Unload filament script for use with Blocks printer.
 // M907 - Set digital trimpot motor current using axis codes.
 // M908 - Control digital trimpot directly.
 // M350 - Set microstepping mode.
@@ -204,7 +205,6 @@
 //===========================================================================
 
 extern boolean FilamentMenuActive;
-
 #ifdef SDSUPPORT
 CardReader card;
 #endif
@@ -332,6 +332,10 @@ float axis_scaling[3]={1,1,1};  // Build size scaling, default to 1
 
 bool cancel_heatup = false ;
 
+#ifdef ULTIPANEL
+  static float manual_feedrate[] = MANUAL_FEEDRATE;
+#endif // ULTIPANEL
+
 #ifdef FILAMENT_SENSOR
   //Variables for Filament Sensor input 
   float filament_width_nominal=DEFAULT_NOMINAL_FILAMENT_DIA;  //Set nominal filament width, can be changed with M404 
@@ -376,9 +380,6 @@ static boolean comment_mode = false;
 static char *strchr_pointer; // just a pointer to find chars in the command string like X, Y, Z, E, etc
 
 const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
-
-//static float tt = 0;
-//static float bt = 0;
 
 //Inactivity shutdown variables
 static unsigned long previous_millis_cmd = 0;
@@ -636,6 +637,10 @@ void setup()
 
   SET_INPUT(FIL_RUNOUT_PIN);
   WRITE(FIL_RUNOUT_PIN, HIGH);
+
+  //Blocks zero D8 set high to power fans
+  pinMode(8, OUTPUT);
+  digitalWrite(8,LOW); 
 }
 
 #ifdef FILAMENT_RUNOUT_SENSOR
@@ -644,19 +649,14 @@ void setup()
     if (!filament_ran_out) {
       filament_ran_out = true;
 
-FilamentMenuActive = true;
+      FilamentMenuActive = true;
 
-    stop_buffer = true;
-    stop_buffer_code = 2;
-
-     // enquecommand_P(PSTR("M600"));
-     // st_synchronize();
+      stop_buffer = true;
+      stop_buffer_code = 2;
     }
   }
 
 #endif // FILAMENT_RUNOUT_SENSOR
-
-
 
 void loop()
 {
@@ -997,24 +997,11 @@ static void axis_is_at_home(int axis) {
      {
         homeposition[i] = base_home_pos(i); 
      }  
-	// SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
-   //  SERIAL_ECHOPGM("homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
-   // Works out real Homeposition angles using inverse kinematics, 
-   // and calculates homing offset using forward kinematics
-     calculate_delta(homeposition);
-     
-    // SERIAL_ECHOPGM("base Theta= "); SERIAL_ECHO(delta[X_AXIS]);
-    // SERIAL_ECHOPGM(" base Psi+Theta="); SERIAL_ECHOLN(delta[Y_AXIS]);
-     
+    calculate_delta(homeposition);
      for (i=0; i<2; i++)
      {
         delta[i] -= add_homing[i];
      } 
-     
-    // SERIAL_ECHOPGM("addhome X="); SERIAL_ECHO(add_homing[X_AXIS]);
-	// SERIAL_ECHOPGM(" addhome Y="); SERIAL_ECHO(add_homing[Y_AXIS]);
-    // SERIAL_ECHOPGM(" addhome Theta="); SERIAL_ECHO(delta[X_AXIS]);
-    // SERIAL_ECHOPGM(" addhome Psi+Theta="); SERIAL_ECHOLN(delta[Y_AXIS]);
       
      calculate_SCARA_forward_Transform(delta);
      
@@ -1896,6 +1883,27 @@ void process_commands()
         break;
 #endif // Z_PROBE_SLED
 #endif // ENABLE_AUTO_BED_LEVELING
+    case 35:
+      card.sdprinting = false;
+      card.closefile();
+
+      setTargetHotend(0,0);
+
+      quickStop();
+
+      current_position[Z_AXIS]=current_position[Z_AXIS]+20;
+      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], manual_feedrate[X_AXIS]/60, active_extruder);
+ 
+      enquecommand_P(PSTR("G28 X Y"));
+
+      autotempShutdown();
+
+      cancel_heatup = true;
+      LCD_MESSAGEPGM(WELCOME_MSG);
+      lcd_update();
+      setTargetHotend0(0);
+      lcd_return_to_status();
+      break;
     case 90: // G90
       relative_mode = false;
       break;
@@ -2070,8 +2078,8 @@ void process_commands()
       plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], feedrate/60, active_extruder); //final untretract
 
       stop_buffer = false;
-
       LCD_MESSAGEPGM(MSG_PRINTING);
+      
       lcd_show_status();
       lcd_update();
       break;
@@ -3851,7 +3859,7 @@ lcd_update();
       plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS],target[E_AXIS], 200/60, active_extruder);
       st_synchronize();
       delay(100);
-      target[E_AXIS]+=610;
+      target[E_AXIS]+=430;
       plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS],target[E_AXIS], 2000/60, active_extruder);
       st_synchronize();
       /*target[E_AXIS]+=100;
@@ -3910,8 +3918,8 @@ lcd_update();
       stop_buffer = false;
         set_pageShowInfo(10);
     set_ChangeScreen(true);
- 
-  LCD_MESSAGEPGM(MSG_PRINTING);
+      LCD_MESSAGEPGM(MSG_PRINTING);
+      
       changing_filament=false;
 
       break;
@@ -3986,9 +3994,15 @@ lcd_update();
   lcd_update();
   manage_heater();   
   }
-  
-  set_pageShowInfo(1);
-  set_ChangeScreen(true);        
+  if (current_temperature[active_extruder] > 100) {
+    set_pageShowInfo(1);
+    set_ChangeScreen(true); 
+  }
+  else {
+    set_pageShowInfo(25);
+    set_ChangeScreen(true); 
+  }
+         
 //        st_synchronize();       
        //hacer homing
        
@@ -4174,7 +4188,7 @@ set_pageShowInfo(7);
       st_synchronize();
       delay(100);
       //-- Extruir!
-      current_position[E_AXIS] += 610.0;
+      current_position[E_AXIS] += 430.0;
       plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],current_position[E_AXIS], 2000/60, active_extruder);
       st_synchronize(); 
 
@@ -4279,7 +4293,7 @@ set_pageShowInfo(7);
       st_synchronize(); 
       
       //-- Sacar!
-      current_position[E_AXIS] -= 800.0;
+      current_position[E_AXIS] -= 500.0;
       plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],current_position[E_AXIS], 2000/60, active_extruder);
       st_synchronize();
        tone(BEEPER, 6000);
@@ -4307,9 +4321,10 @@ target_temperature[active_extruder]=0;
   //  do_blocking_extrude_to(30);
   //  do_blocking_extrude_to(-100);
 //LCD_MESSAGEPGM("Blocks one ready");
+ disable_e0();
+        disable_e1();
+        disable_e2();
       break;  
-    
-
 
     case 907: // M907 Set digital trimpot motor current using axis codes.
     {

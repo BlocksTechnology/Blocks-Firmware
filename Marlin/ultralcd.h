@@ -5,24 +5,25 @@
 
 #ifdef ULTRA_LCD
 
-  void lcd_update();
-  void lcd_init();
-  void lcd_setstatus(const char* message);
-  void lcd_setstatuspgm(const char* message);
-  void lcd_setalertstatuspgm(const char* message);
-  void lcd_reset_alert_level();
-  bool lcd_detected(void);
-  void lcd_show_status();
+void lcd_update();
+void lcd_return_to_status();
+void lcd_init();
+void lcd_setstatus(const char* message);
+void lcd_setstatuspgm(const char* message);
+void lcd_setalertstatuspgm(const char* message);
+void lcd_reset_alert_level();
+bool lcd_detected(void);
+void lcd_show_status();
 
-  void set_pageShowInfo(int value);
-  void set_ChangeScreen(boolean state);
-  void config_lcd_level_bed(void);
-  void lcd_level_bed_cooling(void);
-  void lcd_level_bed(void);
+void set_pageShowInfo(int value);
+void set_ChangeScreen(boolean state);
+void config_lcd_level_bed(void);
+void lcd_level_bed_cooling(void);
+void lcd_level_bed(void);
 
 #ifdef DOGLCD
-  extern int lcd_contrast;
-  void lcd_setcontrast(uint8_t value);
+extern int lcd_contrast;
+void lcd_setcontrast(uint8_t value);
 #endif
 
   static unsigned char blink = 0;	// Variable for visualization of fan rotation in GLCD
@@ -40,27 +41,26 @@
     extern volatile uint8_t buttons_reprapworld_keypad; // to store the keypad shift register values
   #endif
   #else
-  FORCE_INLINE void lcd_buttons_update() {}
+    FORCE_INLINE void lcd_buttons_update() {}
   #endif
 
-  extern int plaPreheatHotendTemp;
-  extern int plaPreheatHPBTemp;
-  extern int plaPreheatFanSpeed;
+    extern int plaPreheatHotendTemp;
+    extern int plaPreheatHPBTemp;
+    extern int plaPreheatFanSpeed;
 
-  extern int absPreheatHotendTemp;
-  extern int absPreheatHPBTemp;
-  extern int absPreheatFanSpeed;
-  
-  extern bool cancel_heatup;
-  
+    extern int absPreheatHotendTemp;
+    extern int absPreheatHPBTemp;
+    extern int absPreheatFanSpeed;
+    extern bool cancel_heatup;
+
   #ifdef FILAMENT_LCD_DISPLAY
-        extern unsigned long message_millis;
+    extern unsigned long message_millis;
   #endif
     
-  void lcd_buzz(long duration,uint16_t freq);
-  bool lcd_clicked();
+    void lcd_buzz(long duration,uint16_t freq);
+    bool lcd_clicked();
 
-  void lcd_ignore_click(bool b=true);
+    void lcd_ignore_click(bool b=true);
 
   #ifdef NEWPANEL
     #define EN_C (1<<BLEN_C)
@@ -102,13 +102,13 @@
   #endif//NEWPANEL
 
 #else //no LCD
-  FORCE_INLINE void lcd_update() {}
-  FORCE_INLINE void lcd_init() {}
-  FORCE_INLINE void lcd_setstatus(const char* message) {}
-  FORCE_INLINE void lcd_buttons_update() {}
-  FORCE_INLINE void lcd_reset_alert_level() {}
-  FORCE_INLINE void lcd_buzz(long duration,uint16_t freq) {}
-  FORCE_INLINE bool lcd_detected(void) { return true; }
+    FORCE_INLINE void lcd_update() {}
+    FORCE_INLINE void lcd_init() {}
+    FORCE_INLINE void lcd_setstatus(const char* message) {}
+    FORCE_INLINE void lcd_buttons_update() {}
+    FORCE_INLINE void lcd_reset_alert_level() {}
+    FORCE_INLINE void lcd_buzz(long duration,uint16_t freq) {}
+    FORCE_INLINE bool lcd_detected(void) { return true; }
 
   #define LCD_MESSAGEPGM(x) 
   #define LCD_ALERTMESSAGEPGM(x) 
@@ -120,7 +120,6 @@ char *itostr31(const int &xx);
 char *itostr3(const int &xx);
 char *itostr3left(const int &xx);
 char *itostr4(const int &xx);
-
 char *ftostr3(const float &x);
 char *ftostr31ns(const float &x); // float to string without sign character
 char *ftostr31(const float &x);

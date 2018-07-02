@@ -440,6 +440,14 @@ void manage_heater()
 
   for(int e = 0; e < EXTRUDERS; e++) 
   {
+      //Blocks zero mod for fans
+    if((current_temperature[e] > 50) || (target_temperature[e] > 0)){
+      digitalWrite(8,HIGH);
+    } else {
+      digitalWrite(8,LOW);
+    }
+
+
 
 #if defined (THERMAL_RUNAWAY_PROTECTION_PERIOD) && THERMAL_RUNAWAY_PROTECTION_PERIOD > 0
     thermal_runaway_protection(&thermal_runaway_state_machine[e], &thermal_runaway_timer[e], current_temperature[e], target_temperature[e], e, THERMAL_RUNAWAY_PROTECTION_PERIOD, THERMAL_RUNAWAY_PROTECTION_HYSTERESIS);

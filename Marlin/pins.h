@@ -725,7 +725,8 @@
     #if MB(3DRAG)
       #define HEATER_BED_PIN     9    // BED
     #else
-      #define HEATER_BED_PIN     8    // BED
+      //Blocks zero mod for fans power #define HEATER_BED_PIN     8    // BED
+    #define HEATER_BED_PIN     -1 //not bed
     #endif
   #endif
 

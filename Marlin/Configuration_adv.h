@@ -444,7 +444,7 @@ const unsigned int dropsegments=5; //everything with less than this number of st
     #define FILAMENTCHANGE_YPOS 3
     #define FILAMENTCHANGE_ZADD 10
     #define FILAMENTCHANGE_FIRSTRETRACT -5.5
-    #define FILAMENTCHANGE_FINALRETRACT -800
+    #define FILAMENTCHANGE_FINALRETRACT -500
   #endif
 #endif
 

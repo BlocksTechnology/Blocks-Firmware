@@ -9,8 +9,8 @@
 #define LANGUAGE_EN_H
 
 #define MACHINE_NAME "Blocks zero"
-#define FIRMWARE_URL "http://www.blockstec.com"
-#define FIRMWARE_VER "v1.2.1"
+	#define FIRMWARE_URL "http://www.blockstec.com"
+	#define FIRMWARE_VER "v1.3"
 
 #define WELCOME_MSG                         MACHINE_NAME " ready."
 #define MSG_SD_INSERTED                     "Card inserted"
@@ -158,7 +158,9 @@
 	#define MSG_RETRACTING "Retracting"
 	#define MSG_WELLCOME "Blocks zero"
 	#define MSG_LP_INTRO "  Leveling plate...    Press to start   "
-	#define MSG_LP_1 " Adjust first point  & Press the button"
+	#define MSG_LP_1 "    Careful HOT!     Adjust first point"    
+	#define MSG_FIRST_POINT "  Adjust first point  "
+	#define MSG_LP_1_1 " & Press the button"
 	#define MSG_LP_2 "Adjust second point  & Press the button"
 	#define MSG_LP_3 "Adjust third point   & Press the button"
 	#define MSG_LP_4 "Adjust fourth point   & Press the button"
