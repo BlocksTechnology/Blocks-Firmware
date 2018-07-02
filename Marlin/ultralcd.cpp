@@ -1007,9 +1007,9 @@ static void config_lcd_level_bed_clean_nozzle()
 static void config_lcd_level_bed_ask_clean_nozzle()
 {
     START_MENU();
-    MENU_ITEM(back, "Clean nozzle?", lcd_main_menu);
-    MENU_ITEM(function, "No", config_lcd_level_bed_heat_bed);
-    MENU_ITEM(function, "Yes", config_lcd_level_bed_clean_nozzle);
+    MENU_ITEM(back, "Is nozzle clean?", lcd_main_menu);
+    MENU_ITEM(function, "Yes", config_lcd_level_bed_heat_bed);
+    MENU_ITEM(function, "No", config_lcd_level_bed_clean_nozzle);
   MENU_ITEM(submenu, "Cancel", lcd_main_menu);
     END_MENU();
 }
