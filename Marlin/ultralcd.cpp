@@ -4146,7 +4146,9 @@ void lcd_advanced_pause_toocold_menu() {
       #if LCD_HEIGHT > 2
         STATIC_ITEM(MSG_FILAMENT_CHANGE_OPTION_HEADER, true, false);
       #endif
-      MENU_ITEM(function, "Continue Print", lcd_advanced_pause_continue_print);
+      MENU_ITEM(function, "Load New Filament", lcd_advanced_pause_continue_print);
+      STATIC_ITEM("");
+      STATIC_ITEM("");
       MENU_ITEM(function, "Stop", lcd_exit_heating_bed_nozzle);
       END_MENU();
     }
@@ -5454,6 +5456,10 @@ static void lcd_exit_heating_bed_nozzle() {
   filament_load_etc = false;
   filament_control_lu = 0;
   load = false;
+  card.stopSDPrint();
+  clear_command_queue();
+  print_job_timer.stop();
+  lcd_setstatusPGM(PSTR(WELCOME_MSG), -1);
   lcd_return_to_status();
 }
 
