@@ -185,6 +185,10 @@ void kill(const char*);
 
 void quickstop_stepper();
 extern bool printing_from_wifi;
+// Variable to control Filament Load or Unload
+// 0 - No procedure is being done
+// 1 - Filament is being Loaded
+// 2 - Filament is being Unloaded
 extern int filament_control_lu;
 extern bool filament_loaded;
 extern bool filament_load_pla;
