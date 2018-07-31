@@ -284,6 +284,7 @@
 #define MSG_PRE_EXTRUD                       "Insert & Press"
 #define MSG_BED_TARGET                       "  Bed: "
 #define MSG_FILAMENT_CHANGE_HEADER           "FILAMENT CHANGE"
+#define MSG_HEATING_NOZZLE_HEADER            "HEATING NOZZLE"
 #define MSG_FILAMENT_LOAD_HEADER             "LOAD FILAMENT"
 #define MSG_FILAMENT_UNLOAD_HEADER           "UNLOAD FILAMENT"
 #define MSG_Z_OFFSET_PROBES                  "Offset between probes"

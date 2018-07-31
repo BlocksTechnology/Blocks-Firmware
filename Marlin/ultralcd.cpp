@@ -4201,7 +4201,7 @@ void lcd_advanced_pause_toocold_menu() {
 
     void lcd_advanced_pause_wait_for_nozzles_to_heat() {
       START_SCREEN();
-      STATIC_ITEM(MSG_FILAMENT_CHANGE_HEADER, true, true);
+      STATIC_ITEM(MSG_HEATING_NOZZLE_HEADER, true, true);
       STATIC_ITEM(MSG_FILAMENT_CHANGE_HEATING_1);
       #ifdef MSG_FILAMENT_CHANGE_HEATING_2
         STATIC_ITEM(MSG_FILAMENT_CHANGE_HEATING_2);
@@ -4389,11 +4389,10 @@ void lcd_advanced_pause_toocold_menu() {
 
     void piece_center() {
       START_SCREEN();
-      STATIC_ITEM("Put Calibration Piece");
-      STATIC_ITEM("on the proper place");
-      STATIC_ITEM("of the plate and");
-      STATIC_ITEM("press the button");
-      STATIC_ITEM("  to continue  ");
+      STATIC_ITEM("Place Calibration");
+      STATIC_ITEM("Piece as shown in the");
+      STATIC_ITEM("manual and press the");
+      STATIC_ITEM("button to continue");
       END_SCREEN();
     }
 
