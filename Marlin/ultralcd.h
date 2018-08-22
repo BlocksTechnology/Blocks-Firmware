@@ -34,6 +34,7 @@
 /////
   extern float bed_level_probe;
   extern float graus;
+  void lcd_set_offset();
 /////
 /////
 

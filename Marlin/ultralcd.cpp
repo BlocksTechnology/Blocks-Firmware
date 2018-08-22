@@ -4371,6 +4371,16 @@ void lcd_advanced_pause_toocold_menu() {
       END_SCREEN();
     }
 
+    void started_full_calibration() {
+      START_SCREEN();
+      STATIC_ITEM("Assisted Bed");
+      STATIC_ITEM("Leveling");
+      STATIC_ITEM("This function will repeat");
+      STATIC_ITEM("until there is no point needing");
+      STATIC_ITEM("to be adjusted");
+      END_SCREEN();
+    }
+
     void started() {
       START_SCREEN();
       STATIC_ITEM("");
@@ -4441,6 +4451,10 @@ void lcd_advanced_pause_toocold_menu() {
         case STARTED:
           defer_return_to_status = true;
           lcd_goto_screen(started);
+          break;
+        case STARTED_FULL_CALIBRATION:
+          defer_return_to_status = true;
+          lcd_goto_screen(started_full_calibration);
           break;
         case RETURN_STATUS:
           lcd_return_to_status();
@@ -5366,16 +5380,11 @@ void lcd_reset_alert_level() { lcd_status_message_level = 0; }
 
 void lcd_set_offset()
 {  
-  enqueue_and_echo_commands_P(PSTR("G36"));
-  enqueue_and_echo_commands_P(PSTR("G1 Z8 F400"));
-  enqueue_and_echo_commands_P(PSTR("G1 X15 F2000")); 
-  zprobe_zoffset = 0;
-  settings.save();
   lcd_goto_screen(lcd_set_offset_screen);
   
 }
 
-static void lcd_set_offset_screen() {
+void lcd_set_offset_screen() {
   float min=-8.0;
   float max=8.0;
   defer_return_to_status = true;
@@ -5406,18 +5415,12 @@ static void lcd_set_offset_screen() {
 
 }
 
-static void continue_nozzle_adjustment_clean_nozzle()
-{
-  enqueue_and_echo_commands_P(PSTR("G28"));
-  enqueue_and_echo_commands_P(PSTR("G37"));
-}
-
 static void nozzle_adjustment_clean_nozzle()
 {
     START_MENU();
     STATIC_ITEM("Is the nozzle clean?");
-    MENU_ITEM(function, "Yes", lcd_set_offset);
-    MENU_ITEM(function, "No", continue_nozzle_adjustment_clean_nozzle);
+    MENU_ITEM(gcode, "Yes", PSTR("G36"));
+    MENU_ITEM(gcode, "No", PSTR("G37"));
     MENU_ITEM(submenu, MSG_BACK, lcd_level_plate);
     END_MENU();
 }
@@ -5579,6 +5582,13 @@ static void lcd_filament_menu()
     END_MENU();
 }
 
+static void lcd_full_calibration_function() {
+  full_calibration = true;
+  enqueue_and_echo_commands_P(PSTR("G39"));
+  enqueue_and_echo_commands_P(PSTR("G34"));
+  enqueue_and_echo_commands_P(PSTR("G37"));
+}
+
 
 static void lcd_level_plate()
 {
@@ -5586,7 +5596,8 @@ static void lcd_level_plate()
   MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
   MENU_ITEM(submenu, MSG_LEVEL_PLATE, heating_bed_screen);
   MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle);
-  MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));  
+  MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));
+  MENU_ITEM(function, "Full Calibration", lcd_full_calibration_function);
   END_MENU();    
 }
 

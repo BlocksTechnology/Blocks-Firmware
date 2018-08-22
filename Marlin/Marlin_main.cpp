@@ -732,6 +732,8 @@ bool filament_loaded = false;
 bool filament_load_pla = false;
 bool filament_load_etc = false;
 bool load = false;
+bool full_calibration = false;
+bool point_needed_rotation =  false;
 //////
 //////
 /**
@@ -6164,6 +6166,7 @@ static void lcd_assisted_bed (float &diff_between_point, float &base_point) {
   lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
 
   while ((diff_between_point >= 0.05) || (diff_between_point <= -0.05)) {
+    point_needed_rotation = true;
     graus = 0;
     graus = diff_between_point * 360;
     bed_level_probe = round(abs(graus));
@@ -6202,10 +6205,17 @@ static void lcd_assisted_bed (float &diff_between_point, float &base_point) {
 inline void gcode_G34() {
 
   int done = 0;
-
-  lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
-  lcd_assisted_bed_leveling(STARTED);
-  lcd_update();
+  if(!full_calibration) {
+    
+    lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+    lcd_assisted_bed_leveling(STARTED);
+    lcd_update();
+  }
+  else {
+    lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
+    lcd_assisted_bed_leveling(STARTED_FULL_CALIBRATION);
+    lcd_update(); 
+  }
 
   home_all_axes();
   float measured_z = 0;
@@ -6273,7 +6283,14 @@ inline void gcode_G34() {
   //// FINAL PROBING
   //// HOMING
   thermalManager.setTargetBed(0);
-  enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+  
+  enqueue_and_echo_commands_P(PSTR("G28 X Y"));    
+  
+  if(full_calibration && point_needed_rotation) {
+    point_needed_rotation =  false;
+    gcode_G34();
+  }
+
   lcd_assisted_bed_leveling(RETURN_STATUS);
 }
 
@@ -6304,11 +6321,23 @@ inline void gcode_G35() {
 // Nozzle offset adjustment
 inline void gcode_G36() {
   home_all_axes();
+  zprobe_zoffset = 0;
+  settings.save();
+  
 
   float xpos = parser.linearval('X', LEFT_PROBE_BED_POSITION);
   float ypos = parser.linearval('Y', BACK_PROBE_BED_POSITION);
 
   zprobe_zoffset = probe_pt(xpos, ypos, parser.boolval('E'), 1);
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 10;
+  current_position[X_AXIS] = 15;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+  lcd_set_offset();
+  
 }
 
 // Nozzle heating (for cleanup)
@@ -6326,7 +6355,7 @@ inline void gcode_G37() {
   wait_for_user = false;
 
   thermalManager.setTargetHotend(0, active_extruder);
-  lcd_set_offset();
+  gcode_G36();
   defer_return_to_status = false;
 }
 
@@ -6361,8 +6390,9 @@ inline void gcode_G39() {
   noTone(BEEPER_PIN);
   lcd_buzz(50,6000);
 
-  //home_all_axes();
-  enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+  if(!full_calibration) {
+    enqueue_and_echo_commands_P(PSTR("G28 X Y"));
+  }
 
   zprobe_zprobe_zoffset+=(measured_z_left-measured_z_right);
   settings.save();

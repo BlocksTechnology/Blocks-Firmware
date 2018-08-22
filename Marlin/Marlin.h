@@ -194,6 +194,7 @@ extern bool filament_loaded;
 extern bool filament_load_pla;
 extern bool filament_load_etc;
 extern bool load;
+extern bool full_calibration;
 extern float zprobe_zprobe_zoffset;
 
 extern uint8_t marlin_debug_flags;

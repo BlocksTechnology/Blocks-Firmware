@@ -151,7 +151,8 @@ enum EndstopEnum {
       PROBING,
       GRAUS,
       BED_LEVELING_DONE,
-      CLEAN_NOZZLE_TWEEZERS
+      CLEAN_NOZZLE_TWEEZERS,
+      STARTED_FULL_CALIBRATION
     };
   #endif
 #endif
