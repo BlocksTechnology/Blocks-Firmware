@@ -5590,6 +5590,16 @@ static void lcd_full_calibration_function() {
 }
 
 
+static void reset_eeprom() {
+  START_MENU();
+  STATIC_ITEM("Are you sure?");
+  STATIC_ITEM("Factory Calibration");
+  STATIC_ITEM("values will be saved");
+  MENU_ITEM(function,"Yes", lcd_factory_settings);
+  MENU_ITEM(submenu, "No", lcd_level_plate);
+  END_MENU();
+}
+
 static void lcd_level_plate()
 {
   START_MENU();
@@ -5597,6 +5607,7 @@ static void lcd_level_plate()
   MENU_ITEM(submenu, MSG_LEVEL_PLATE, heating_bed_screen);
   MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle);
   MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));
+  MENU_ITEM(submenu, "Reset EEPROM", reset_eeprom);
   //MENU_ITEM(function, "Full Calibration", lcd_full_calibration_function);
   END_MENU();    
 }
