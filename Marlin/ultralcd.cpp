@@ -850,9 +850,9 @@ void kill_screen(const char* lcd_msg) {
       wait_for_heatup = false;
 
       enqueue_and_echo_commands_P(PSTR("G91"));
-      enqueue_and_echo_commands_P(PSTR("G1 E-20 F4000"));
+      enqueue_and_echo_commands_P(PSTR("G1 E-10 F2000"));
       enqueue_and_echo_commands_P(PSTR("G28 X Y"));
-      enqueue_and_echo_commands_P(PSTR("G1 E30 F600"));
+      enqueue_and_echo_commands_P(PSTR("G1 E15 F400"));
 
       lcd_setstatusPGM(PSTR(MSG_PRINT_ABORTED), -1);
       lcd_return_to_status();
