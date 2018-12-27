@@ -3190,6 +3190,7 @@ void kill_screen(const char* lcd_msg) {
     MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
     MENU_ITEM(gcode, MSG_DISABLE_STEPPERS, PSTR("M84"));
     MENU_ITEM(submenu, MSG_TEMPERATURE, lcd_control_temperature_menu);
+    MENU_ITEM(function, MSG_PREHEAT_1, lcd_preheat_m1_e0);
 /*
     MENU_ITEM(submenu, MSG_MOTION, lcd_control_motion_menu);
     MENU_ITEM(submenu, MSG_FILAMENT, lcd_control_filament_menu);
