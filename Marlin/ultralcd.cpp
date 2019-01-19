@@ -3164,7 +3164,9 @@ void kill_screen(const char* lcd_msg) {
 
   static void lcd_factory_settings() {
     settings.reset();
+    settings.save();
     lcd_completion_feedback();
+    lcd_return_to_status();
   }
 
   #if ENABLED(EEPROM_SETTINGS)
