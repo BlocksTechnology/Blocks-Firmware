@@ -6168,7 +6168,7 @@ static void lcd_assisted_bed (float &diff_between_point, float &base_point) {
   while ((diff_between_point >= 0.05) || (diff_between_point <= -0.05)) {
     point_needed_rotation = true;
     graus = 0;
-    graus = diff_between_point * 360;
+    graus = ((diff_between_point * 360) / 0.5);
     bed_level_probe = round(abs(graus));
     lcdDrawUpdate = LCDVIEW_CALL_NO_REDRAW;
 
