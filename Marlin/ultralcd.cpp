@@ -3126,7 +3126,7 @@ void kill_screen(const char* lcd_msg) {
     }
     else
       MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
-
+/*
     #if ENABLED(SWITCHING_EXTRUDER) || ENABLED(DUAL_X_CARRIAGE)
       if (active_extruder)
         MENU_ITEM(gcode, MSG_SELECT " " MSG_E1, PSTR("T0"));
@@ -3148,7 +3148,7 @@ void kill_screen(const char* lcd_msg) {
         #endif // E_MANUAL > 3
       #endif // E_MANUAL > 2
     #endif // E_MANUAL > 1
-
+*/
     END_MENU();
   }
 
@@ -3193,6 +3193,7 @@ void kill_screen(const char* lcd_msg) {
     MENU_ITEM(gcode, MSG_DISABLE_STEPPERS, PSTR("M84"));
     MENU_ITEM(submenu, MSG_TEMPERATURE, lcd_control_temperature_menu);
     MENU_ITEM(function, MSG_PREHEAT_1, lcd_preheat_m1_e0);
+    MENU_ITEM(submenu, MSG_MOVE_AXIS, lcd_move_menu);
 /*
     MENU_ITEM(submenu, MSG_MOTION, lcd_control_motion_menu);
     MENU_ITEM(submenu, MSG_FILAMENT, lcd_control_filament_menu);
