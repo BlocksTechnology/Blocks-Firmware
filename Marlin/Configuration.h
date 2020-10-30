@@ -688,8 +688,8 @@
  *      O-- FRONT --+
  *    (0,0)
  */
-#define X_PROBE_OFFSET_FROM_EXTRUDER 25  // X offset: -left  +right  [of the nozzle]
-#define Y_PROBE_OFFSET_FROM_EXTRUDER 22  // Y offset: -front +behind [the nozzle]
+#define X_PROBE_OFFSET_FROM_EXTRUDER 18  // X offset: -left  +right  [of the nozzle]
+#define Y_PROBE_OFFSET_FROM_EXTRUDER 15  // Y offset: -front +behind [the nozzle]
 #define Z_PROBE_OFFSET_FROM_EXTRUDER 7  // Z offset: -below +above  [the nozzle]
 
 // X and Y axis travel speed (mm/m) between probes
@@ -753,9 +753,9 @@
 // @section machine
 
 // Invert the stepper direction. Change (or reverse the motor connector) if an axis goes the wrong way.
-#define INVERT_X_DIR true
-#define INVERT_Y_DIR true
-#define INVERT_Z_DIR true
+#define INVERT_X_DIR false
+#define INVERT_Y_DIR false
+#define INVERT_Z_DIR false
 
 // Enable this option for Toshiba stepper drivers
 //#define CONFIG_STEPPERS_TOSHIBA
@@ -763,7 +763,7 @@
 // @section extruder
 
 // For direct drive extruder v9 set to true, for geared extruder set to false.
-#define INVERT_E0_DIR true
+#define INVERT_E0_DIR false
 #define INVERT_E1_DIR false
 #define INVERT_E2_DIR false
 #define INVERT_E3_DIR false
@@ -773,7 +773,7 @@
 
 #define NO_MOTION_BEFORE_HOMING  // Inhibit movement until all axes have been homed
 
-#define Z_HOMING_HEIGHT 10  // (in mm) Minimal z height before homing (G28) for Z clearance above the bed, clamps, ...
+#define Z_HOMING_HEIGHT 3  // (in mm) Minimal z height before homing (G28) for Z clearance above the bed, clamps, ...
                              // Be sure you have this distance over your Z_MAX_POS in case.
 
 // Direction of endstops when homing; 1=MAX, -1=MIN
@@ -785,16 +785,16 @@
 // @section machine
 
 // The size of the print bed
-#define X_BED_SIZE 200
-#define Y_BED_SIZE 210
+#define X_BED_SIZE 315
+#define Y_BED_SIZE 310
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
 #define X_MIN_POS -14
 #define Y_MIN_POS 0
 #define Z_MIN_POS 0
-#define X_MAX_POS 214
-#define Y_MAX_POS 210
-#define Z_MAX_POS 215
+#define X_MAX_POS 329
+#define Y_MAX_POS 310
+#define Z_MAX_POS 320
 
 /**
  * Software Endstops
@@ -914,8 +914,8 @@
 
 #if ENABLED(AUTO_BED_LEVELING_LINEAR) || ENABLED(AUTO_BED_LEVELING_BILINEAR)
 
-  #define X_PROBE_LEFT_OFFSET -25
-  #define X_PROBE_RIGHT_OFFSET 25
+  #define X_PROBE_LEFT_OFFSET -18
+  #define X_PROBE_RIGHT_OFFSET 18
 
   // Set the number of grid points per dimension.
   #define GRID_MAX_POINTS_X 2
@@ -925,7 +925,7 @@
   #define LEFT_PROBE_BED_POSITION  X_MIN_POS + X_PROBE_RIGHT_OFFSET
   #define RIGHT_PROBE_BED_POSITION X_MAX_POS + X_PROBE_LEFT_OFFSET
   #define FRONT_PROBE_BED_POSITION Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER
-  #define BACK_PROBE_BED_POSITION  Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER - 30
+  #define BACK_PROBE_BED_POSITION  Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER - 45
 
   // The Z probe minimum outer margin (to validate G29 parameters).
   #define MIN_PROBE_EDGE 10
@@ -997,8 +997,8 @@
   //#define MESH_G28_REST_ORIGIN // After homing all axes ('G28' or 'G28 XYZ') rest Z at Z_MIN_POS
 #elif ENABLED(AUTO_BED_LEVELING_TWIN_PROBES)
 
-  #define X_PROBE_LEFT_OFFSET -25
-  #define X_PROBE_RIGHT_OFFSET 25
+  #define X_PROBE_LEFT_OFFSET -18
+  #define X_PROBE_RIGHT_OFFSET 18
 
   #define Z_PROBES_OFFSET 0.2
 
@@ -1009,8 +1009,8 @@
   // Set the boundaries for probing (where the probe can reach).
   #define LEFT_PROBE_BED_POSITION  X_MIN_POS + X_PROBE_RIGHT_OFFSET
   #define RIGHT_PROBE_BED_POSITION X_MAX_POS + X_PROBE_LEFT_OFFSET
-  #define FRONT_PROBE_BED_POSITION Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER
-  #define BACK_PROBE_BED_POSITION  Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER - 30
+  #define FRONT_PROBE_BED_POSITION Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER + 7
+  #define BACK_PROBE_BED_POSITION  Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER - 55
 
   // The Z probe minimum outer margin (to validate G29 parameters).
   #define MIN_PROBE_EDGE 10
@@ -1062,8 +1062,8 @@
 #define Z_SAFE_HOMING
 
 #if ENABLED(Z_SAFE_HOMING)
-  #define Z_SAFE_HOMING_X_POINT X_MIN_POS + X_PROBE_OFFSET_FROM_EXTRUDER    // X point for Z homing when homing all axes (G28).
-  #define Z_SAFE_HOMING_Y_POINT Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER    // Y point for Z homing when homing all axes (G28).
+  #define Z_SAFE_HOMING_X_POINT X_MIN_POS + X_PROBE_OFFSET_FROM_EXTRUDER       // X point for Z homing when homing all axes (G28).
+  #define Z_SAFE_HOMING_Y_POINT Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER + 7   // Y point for Z homing when homing all axes (G28).
 #endif
 
 // Homing speeds (mm/m)

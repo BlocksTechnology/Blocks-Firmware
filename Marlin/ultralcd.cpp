@@ -4371,6 +4371,8 @@ void lcd_advanced_pause_toocold_menu() {
 
     void next_point() {
       START_SCREEN();
+      STATIC_ITEM("");
+      STATIC_ITEM("");
       STATIC_ITEM("Next Point");
       END_SCREEN();
     }
@@ -4445,6 +4447,14 @@ void lcd_advanced_pause_toocold_menu() {
       END_SCREEN();
     }
 
+    void manual_bed_leveling() {
+      START_SCREEN();
+      STATIC_ITEM("");
+      STATIC_ITEM("Manual Bed");
+      STATIC_ITEM("Leveling");
+      END_SCREEN();
+    }
+
 
     void lcd_assisted_bed_leveling (const Assistedbedleveling message) {
       switch (message) {
@@ -4482,6 +4492,10 @@ void lcd_advanced_pause_toocold_menu() {
         case CLEAN_NOZZLE_TWEEZERS:
           defer_return_to_status =  true;
           lcd_goto_screen(clean_nozzle_tweezers);
+          break;
+        case MANUAL_BED_LEVELING:
+          defer_return_to_status =  true;
+          lcd_goto_screen(manual_bed_leveling);
           break;
       }
     }
@@ -5609,6 +5623,7 @@ static void lcd_level_plate()
   START_MENU();
   MENU_ITEM(submenu, MSG_BACK, lcd_main_menu);
   MENU_ITEM(submenu, MSG_LEVEL_PLATE, heating_bed_screen);
+  MENU_ITEM(gcode, "Manual Level Plate", PSTR("G40"));
   MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle);
   MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));
   MENU_ITEM(submenu, "Reset EEPROM", reset_eeprom);

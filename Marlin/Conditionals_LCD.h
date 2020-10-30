@@ -133,7 +133,7 @@
   #elif ENABLED(MKS_MINI_12864)
 
     #define MINIPANEL
-    #define DEFAULT_LCD_CONTRAST 200
+    #define DEFAULT_LCD_CONTRAST 170
     #define LCD_CONTRAST_MAX 255
 
   #endif
