@@ -6403,6 +6403,149 @@ inline void gcode_G39() {
   lcd_return_to_status();
 }
 
+static void waiting() {
+
+  lcd_assisted_bed_leveling(OPTION_NEXT_POINT);
+  lcd_update();
+
+  KEEPALIVE_STATE(PAUSED_FOR_USER);
+  wait_for_user = true;    // LCD click or M108 will clear this
+  while (wait_for_user) {
+    idle(true);
+  }
+  KEEPALIVE_STATE(IN_HANDLER);
+  wait_for_user = false;
+
+}
+
+inline void gcode_G40() {
+
+  lcd_assisted_bed_leveling(MANUAL_BED_LEVELING);
+  lcd_update();
+
+  home_all_axes();
+  
+  set_destination_from_current();
+  current_position[Z_AXIS] = 0.1;
+  current_position[X_AXIS] = 0;
+  current_position[Y_AXIS] = 0;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  waiting();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 10;
+  current_position[X_AXIS] = 0;
+  current_position[Y_AXIS] = 0;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 10;
+  current_position[X_AXIS] = 310;
+  current_position[Y_AXIS] = 0;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 0.1;
+  current_position[X_AXIS] = 310;
+  current_position[Y_AXIS] = 0;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  waiting();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 10;
+  current_position[X_AXIS] = 310;
+  current_position[Y_AXIS] = 0;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 10;
+  current_position[X_AXIS] = 310;
+  current_position[Y_AXIS] = 300;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 0.1;
+  current_position[X_AXIS] = 310;
+  current_position[Y_AXIS] = 300;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  waiting();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 10;
+  current_position[X_AXIS] = 310;
+  current_position[Y_AXIS] = 300;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 10;
+  current_position[X_AXIS] = 0;
+  current_position[Y_AXIS] = 300;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 0.1;
+  current_position[X_AXIS] = 0;
+  current_position[Y_AXIS] = 300;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  waiting();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 10;
+  current_position[X_AXIS] = 0;
+  current_position[Y_AXIS] = 300;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 10;
+  current_position[X_AXIS] = 150;
+  current_position[Y_AXIS] = 150;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  set_destination_from_current();
+  current_position[Z_AXIS] = 0.1;
+  current_position[X_AXIS] = 150;
+  current_position[Y_AXIS] = 150;
+  
+  planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+  stepper.synchronize();
+
+  waiting();
+
+  home_all_axes();
+
+  lcd_return_to_status();
+
+}
+
+
 #if HAS_MESH
 
   /**
@@ -12408,6 +12551,10 @@ void process_parsed_command() {
 
       case 39:
         gcode_G39();    /// Calibrate Probes
+        break;
+
+      case 40:
+        gcode_G40();
         break;
 
 ////////////////////////

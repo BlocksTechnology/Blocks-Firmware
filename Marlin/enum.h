@@ -152,7 +152,8 @@ enum EndstopEnum {
       GRAUS,
       BED_LEVELING_DONE,
       CLEAN_NOZZLE_TWEEZERS,
-      STARTED_FULL_CALIBRATION
+      STARTED_FULL_CALIBRATION,
+      MANUAL_BED_LEVELING
     };
   #endif
 #endif
