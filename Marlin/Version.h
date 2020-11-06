@@ -35,7 +35,7 @@
   /**
    * Marlin release version identifier
    */
-  #define SHORT_BUILD_VERSION "1.1.9.1"
+  #define SHORT_BUILD_VERSION "2.0.0"
 
   /**
    * Verbose version identifier which should contain a reference to the location
@@ -48,7 +48,7 @@
    * here we define this default string as the date where the latest release
    * version was tagged.
    */
-  #define STRING_DISTRIBUTION_DATE "2020-06-20"
+  #define STRING_DISTRIBUTION_DATE "2017-12-25 12:00"
 
   /**
    * Required minimum Configuration.h and Configuration_adv.h file versions.
@@ -57,8 +57,8 @@
    * but not limited to: ADD, DELETE RENAME OR REPURPOSE any directive/option on
    * the configuration files.
    */
-  #define REQUIRED_CONFIGURATION_H_VERSION 010109
-  #define REQUIRED_CONFIGURATION_ADV_H_VERSION 010109
+  #define REQUIRED_CONFIGURATION_H_VERSION 010107
+  #define REQUIRED_CONFIGURATION_ADV_H_VERSION 010107
 
   /**
    * The protocol for communication to the host. Protocol indicates communication
@@ -78,12 +78,12 @@
    * has a distinct Github fork— the Source Code URL should just be the main
    * Marlin repository.
    */
-  #define SOURCE_CODE_URL "https://github.com/MarlinFirmware/Marlin"
+  #define SOURCE_CODE_URL "https://github.com/BlocksTechnology/Blocks-Firmware"
 
   /**
    * Default generic printer UUID.
    */
-  #define DEFAULT_MACHINE_UUID "cede2a2f-41a2-4748-9b12-c55c62f367ff"
+  #define DEFAULT_MACHINE_UUID "357216a6-7f6d-434e-8fce-a26e02958628"
 
   /**
    * The WEBSITE_URL is the location where users can get more information such as

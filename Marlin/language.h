@@ -58,7 +58,6 @@
 // el-gr      Greek (Greece)
 // en         English
 // es         Spanish
-// es_utf8    Spanish (UTF8)
 // eu         Basque-Euskera
 // fi         Finnish
 // fr         French
@@ -68,10 +67,8 @@
 // it         Italian
 // kana       Japanese
 // kana_utf8  Japanese (UTF8)
-// ko_kr      Korean
 // nl         Dutch
 // pl         Polish
-// pl_utf8    Polish (UTF8)
 // pt         Portuguese
 // pt-br      Portuguese (Brazilian)
 // pt-br_utf8 Portuguese (Brazilian) (UTF8)
@@ -151,23 +148,23 @@
 #define MSG_RESEND                          "Resend: "
 #define MSG_UNKNOWN_COMMAND                 "Unknown command: \""
 #define MSG_ACTIVE_EXTRUDER                 "Active Extruder: "
-#define MSG_X_MIN                           "x_min"
-#define MSG_X_MAX                           "x_max"
-#define MSG_X2_MIN                          "x2_min"
-#define MSG_X2_MAX                          "x2_max"
-#define MSG_Y_MIN                           "y_min"
-#define MSG_Y_MAX                           "y_max"
-#define MSG_Y2_MIN                          "y2_min"
-#define MSG_Y2_MAX                          "y2_max"
-#define MSG_Z_MIN                           "z_min"
-#define MSG_Z_MAX                           "z_max"
-#define MSG_Z2_MIN                          "z2_min"
-#define MSG_Z2_MAX                          "z2_max"
-#define MSG_Z_PROBE                         "z_probe"
-#define MSG_FILAMENT_RUNOUT_SENSOR          "filament"
+#define MSG_X_MIN                           "x_min: "
+#define MSG_X_MAX                           "x_max: "
+#define MSG_X2_MIN                          "x2_min: "
+#define MSG_X2_MAX                          "x2_max: "
+#define MSG_Y_MIN                           "y_min: "
+#define MSG_Y_MAX                           "y_max: "
+#define MSG_Y2_MIN                          "y2_min: "
+#define MSG_Y2_MAX                          "y2_max: "
+#define MSG_Z_MIN                           "z_min: "
+#define MSG_Z_MAX                           "z_max: "
+#define MSG_Z2_MIN                          "z2_min: "
+#define MSG_Z2_MAX                          "z2_max: "
+#define MSG_Z_PROBE                         "z_probe: "
 #define MSG_PROBE_Z_OFFSET                  "Probe Z Offset"
 #define MSG_SKEW_MIN                        "min_skew_factor: "
 #define MSG_SKEW_MAX                        "max_skew_factor: "
+#define MSG_FILAMENT_RUNOUT_SENSOR          "filament: "
 #define MSG_ERR_MATERIAL_INDEX              "M145 S<index> out of range (0-1)"
 #define MSG_ERR_M355_NONE                   "No case light"
 #define MSG_ERR_M421_PARAMETERS             "M421 incorrect parameter usage"
@@ -208,14 +205,8 @@
 #define MSG_ENDSTOPS_HIT                    "endstops hit: "
 #define MSG_ERR_COLD_EXTRUDE_STOP           " cold extrusion prevented"
 #define MSG_ERR_LONG_EXTRUDE_STOP           " too long extrusion prevented"
-#define MSG_HOTEND_TOO_COLD                 "Hotend too cold"
-
-#define MSG_FILAMENT_CHANGE_HEAT            "Press button (or M108) to heat nozzle"
-#define MSG_FILAMENT_CHANGE_INSERT          "Insert filament and press button (or M108)"
-#define MSG_FILAMENT_CHANGE_HEAT_LCD        "Press button to heat nozzle"
-#define MSG_FILAMENT_CHANGE_INSERT_LCD      "Insert filament and press button"
-#define MSG_FILAMENT_CHANGE_HEAT_M108       "Send M108 to heat nozzle"
-#define MSG_FILAMENT_CHANGE_INSERT_M108     "Insert filament and send M108"
+#define MSG_TOO_COLD_FOR_M600               "M600 Hotend too cold to change filament"
+#define MSG_SERIAL_ERROR_MENU_STRUCTURE     "Error in menu structure"
 
 #define MSG_ERR_EEPROM_WRITE                "Error writing to EEPROM!"
 
@@ -241,6 +232,8 @@
 #define MSG_KP                              " Kp: "
 #define MSG_KI                              " Ki: "
 #define MSG_KD                              " Kd: "
+#define MSG_B                               "B:"
+#define MSG_T                               "T:"
 #define MSG_AT                              " @:"
 #define MSG_PID_AUTOTUNE_FINISHED           MSG_PID_AUTOTUNE " finished! Put the last Kp, Ki and Kd constants from below into Configuration.h"
 #define MSG_PID_DEBUG                       " PID_DEBUG "
@@ -270,21 +263,31 @@
 #define MSG_DEBUG_COMMUNICATION             "COMMUNICATION"
 #define MSG_DEBUG_LEVELING                  "LEVELING"
 
-///
-/// BLOCKS MADE
-///
-
+//  BLOCKS MADE
+#define MSG_PAUSING                          "Pausing..."
+#define MSG_FILAMENT                         "Filament"
+#define MSG_LEVEL_PLATE                      "Level Plate"
+#define MSG_LP_COOL_1                        "Cooling..."
+#define MSG_LP_COOL_2                        "Temp:"
+#define MSG_LP_COOL_3                        "   Press to abort"
+#define MSG_LP_1                             "Adjust first point  & Press the button"
+#define MSG_LP_2                             "Adjust second point  & Press the button"
+#define MSG_LP_3                             "Adjust third point  & Press the button"
+#define MSG_LP_4                             "Adjust fourth point  & Press the button"
+#define MSG_LP_5                             "     Is it ok?         Press to end"
+#define MSG_LP_6                             " Plate leveled!"
+#define MSG_LP_INTRO                         "  Leveling plate...    Press to start   "
+#define MSG_LOAD                             "Load"
+#define MSG_LOADED                           "Load (Loaded!)"
+#define MSG_UNLOAD                           "Unload"
+#define MSG_ABORT                            "Abort"
+#define MSG_PRE_EXTRUD                       "Insert & Press"
+#define MSG_BED_TARGET                       "  Bed: "
 #define MSG_FILAMENT_CHANGE_HEADER           "FILAMENT CHANGE"
 #define MSG_HEATING_NOZZLE_HEADER            "HEATING NOZZLE"
 #define MSG_FILAMENT_LOAD_HEADER             "LOAD FILAMENT"
 #define MSG_FILAMENT_UNLOAD_HEADER           "UNLOAD FILAMENT"
 #define MSG_Z_OFFSET_PROBES                  "Offset between probes"
-#define MSG_LOAD                             "Load"
-#define MSG_LOADED                           "Load (Loaded!)"
-#define MSG_UNLOAD                           "Unload"
-
-///
-///
 
 // LCD Menu Messages
 
@@ -297,15 +300,6 @@
 #define MSG_Y "Y"
 #define MSG_Z "Z"
 #define MSG_E "E"
-#if IS_KINEMATIC
-  #define MSG_A "A"
-  #define MSG_B "B"
-  #define MSG_C "C"
-#else
-  #define MSG_A "X"
-  #define MSG_B "Y"
-  #define MSG_C "Z"
-#endif
 #define MSG_H1 "1"
 #define MSG_H2 "2"
 #define MSG_H3 "3"
@@ -338,7 +332,6 @@
  && DISABLED(DISPLAY_CHARSET_ISO10646_1) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_5) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_KANA) \
- && DISABLED(DISPLAY_CHARSET_ISO10646_KO_KR) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_GREEK) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_CN) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_TR) \
