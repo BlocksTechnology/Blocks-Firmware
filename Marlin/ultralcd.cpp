@@ -5426,6 +5426,9 @@ void lcd_set_offset_screen() {
     SERIAL_ECHO(zprobe_zoffset);
     lcd_completion_feedback(settings.save());
 
+    current_position[Z_AXIS] = 15;
+    planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
+    
     enqueue_and_echo_commands_P(PSTR("G28"));
     lcd_return_to_status();
     defer_return_to_status = false;
