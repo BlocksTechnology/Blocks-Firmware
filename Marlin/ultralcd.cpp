@@ -5630,7 +5630,7 @@ static void lcd_level_plate()
   MENU_ITEM(submenu, MSG_LEVEL_PLATE, heating_bed_screen);
   MENU_ITEM(gcode, "Manual Level Plate", PSTR("G40"));
   MENU_ITEM(submenu, "Nozzle Adjustment", nozzle_adjustment_clean_nozzle);
-  MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));
+  //MENU_ITEM(gcode, "Calibrate probes", PSTR("G39"));
   MENU_ITEM(submenu, "Reset EEPROM", reset_eeprom);
   //MENU_ITEM(function, "Full Calibration", lcd_full_calibration_function);
   END_MENU();    
