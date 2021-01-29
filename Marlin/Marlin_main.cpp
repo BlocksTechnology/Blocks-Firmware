@@ -10656,7 +10656,7 @@ static void load_filament(const float &load_length = 0, const float &initial_ext
       #endif
 
       /// Load filament
-      destination[E_AXIS] += 20;
+      destination[E_AXIS] += 30;
       RUNPLAN(ADVANCED_PAUSE_EXTRUDE_FEEDRATE);
       stepper.synchronize();
 
