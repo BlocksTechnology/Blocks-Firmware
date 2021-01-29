@@ -4423,14 +4423,16 @@ void lcd_advanced_pause_toocold_menu() {
     void turn_degrees() {
       START_SCREEN();
       STATIC_ITEM(" ");
-      u8g.setPrintPos(8, 34);
+      u8g.setPrintPos(2, 32);
       lcd_print("Turn ");
-      lcd_print(itostr3(bed_level_probe));
+      u8g.setPrintPos(32, 32);
+      lcd_print(itostr4sign(bed_level_probe));
+      u8g.setPrintPos(60, 32);
       if (graus > 0) {
-        lcd_print(" degrees <--");
+        lcd_print("degrees <--");
       }
       else {
-        lcd_print(" degrees -->");
+        lcd_print("degrees -->");
       }
       u8g.setPrintPos(8, 46);
       lcd_print("and press the button");
