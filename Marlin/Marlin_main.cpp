@@ -6325,14 +6325,13 @@ inline void gcode_G36() {
   settings.save();
   
 
-  float xpos = parser.linearval('X', LEFT_PROBE_BED_POSITION);
-  float ypos = parser.linearval('Y', BACK_PROBE_BED_POSITION);
+  float xpos = parser.linearval('X', 150);
+  float ypos = parser.linearval('Y', 150);
 
   zprobe_zoffset = probe_pt(xpos, ypos, parser.boolval('E'), 1);
 
   set_destination_from_current();
   current_position[Z_AXIS] = 10;
-  current_position[X_AXIS] = 15;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6427,8 +6426,8 @@ inline void gcode_G40() {
   
   set_destination_from_current();
   current_position[Z_AXIS] = 0.1;
-  current_position[X_AXIS] = 0;
-  current_position[Y_AXIS] = 0;
+  current_position[X_AXIS] = 10;
+  current_position[Y_AXIS] = 10;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6437,8 +6436,8 @@ inline void gcode_G40() {
 
   set_destination_from_current();
   current_position[Z_AXIS] = 10;
-  current_position[X_AXIS] = 0;
-  current_position[Y_AXIS] = 0;
+  current_position[X_AXIS] = 10;
+  current_position[Y_AXIS] = 10;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6446,7 +6445,7 @@ inline void gcode_G40() {
   set_destination_from_current();
   current_position[Z_AXIS] = 10;
   current_position[X_AXIS] = 310;
-  current_position[Y_AXIS] = 0;
+  current_position[Y_AXIS] = 10;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6454,7 +6453,7 @@ inline void gcode_G40() {
   set_destination_from_current();
   current_position[Z_AXIS] = 0.1;
   current_position[X_AXIS] = 310;
-  current_position[Y_AXIS] = 0;
+  current_position[Y_AXIS] = 10;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6464,7 +6463,7 @@ inline void gcode_G40() {
   set_destination_from_current();
   current_position[Z_AXIS] = 10;
   current_position[X_AXIS] = 310;
-  current_position[Y_AXIS] = 0;
+  current_position[Y_AXIS] = 10;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6472,7 +6471,7 @@ inline void gcode_G40() {
   set_destination_from_current();
   current_position[Z_AXIS] = 10;
   current_position[X_AXIS] = 310;
-  current_position[Y_AXIS] = 300;
+  current_position[Y_AXIS] = 310;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6480,7 +6479,7 @@ inline void gcode_G40() {
   set_destination_from_current();
   current_position[Z_AXIS] = 0.1;
   current_position[X_AXIS] = 310;
-  current_position[Y_AXIS] = 300;
+  current_position[Y_AXIS] = 310;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6490,23 +6489,23 @@ inline void gcode_G40() {
   set_destination_from_current();
   current_position[Z_AXIS] = 10;
   current_position[X_AXIS] = 310;
-  current_position[Y_AXIS] = 300;
+  current_position[Y_AXIS] = 310;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
 
   set_destination_from_current();
   current_position[Z_AXIS] = 10;
-  current_position[X_AXIS] = 0;
-  current_position[Y_AXIS] = 300;
+  current_position[X_AXIS] = 10;
+  current_position[Y_AXIS] = 310;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
 
   set_destination_from_current();
   current_position[Z_AXIS] = 0.1;
-  current_position[X_AXIS] = 0;
-  current_position[Y_AXIS] = 300;
+  current_position[X_AXIS] = 10;
+  current_position[Y_AXIS] = 310;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6515,8 +6514,8 @@ inline void gcode_G40() {
 
   set_destination_from_current();
   current_position[Z_AXIS] = 10;
-  current_position[X_AXIS] = 0;
-  current_position[Y_AXIS] = 300;
+  current_position[X_AXIS] = 10;
+  current_position[Y_AXIS] = 310;
   
   planner.buffer_line(current_position[X_AXIS],current_position[Y_AXIS],current_position[Z_AXIS],current_position[E_AXIS], 100, active_extruder);
   stepper.synchronize();
@@ -6539,7 +6538,7 @@ inline void gcode_G40() {
 
   waiting();
 
-  home_all_axes();
+  enqueue_and_echo_commands_P(PSTR("G28 X Y"));
 
   lcd_return_to_status();
 
